@@ -62,7 +62,10 @@ export function useSubscriptions() {
     const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
 
     try {
-      const res = await fetch(`${API_BASE}/api/subscriptions`);
+      const token = sessionStorage.getItem('subtracker_token');
+      const res = await fetch(`${API_BASE}/api/subscriptions`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setSubscriptions((data || []).map(parseSubscription));
@@ -82,9 +85,12 @@ export function useSubscriptions() {
     try {
       const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
 
+      const token = sessionStorage.getItem('subtracker_token');
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (token) headers.Authorization = `Bearer ${token}`;
       const res = await fetch(`${API_BASE}/api/subscriptions`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(newSub),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -100,9 +106,12 @@ export function useSubscriptions() {
     try {
       const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
 
+      const token = sessionStorage.getItem('subtracker_token');
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (token) headers.Authorization = `Bearer ${token}`;
       const res = await fetch(`${API_BASE}/api/subscriptions/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(updates),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -118,7 +127,8 @@ export function useSubscriptions() {
     try {
       const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
 
-      const res = await fetch(`${API_BASE}/api/subscriptions/${id}`, { method: 'DELETE' });
+      const token = sessionStorage.getItem('subtracker_token');
+      const res = await fetch(`${API_BASE}/api/subscriptions/${id}`, { method: 'DELETE', headers: token ? { Authorization: `Bearer ${token}` } : undefined });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setSubscriptions((prev) => prev.filter((sub) => sub.id !== id));
     } catch (err) {

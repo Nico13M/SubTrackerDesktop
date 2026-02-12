@@ -3,12 +3,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Settings, Bell, Clock, Info } from 'lucide-react';
 import { useSubscriptions } from '@/hooks/useSubscriptions';
+import useAuth from '@/hooks/useAuth';
 
 export function SettingsDialog() {
   const [open, setOpen] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const { stats } = useSubscriptions();
+  const { logout, refresh, loading: authLoading } = useAuth();
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -95,6 +97,25 @@ export function SettingsDialog() {
                 <span>Version</span>
               </div>
               <span className="text-muted-foreground">1.0.0</span>
+            </div>
+          </div>
+
+          {/* Auth actions */}
+          <div className="rounded-xl bg-muted/50 p-4">
+            <h3 className="font-semibold mb-3">Compte</h3>
+            <div className="flex gap-2">
+              <button
+                onClick={async () => { await refresh(); window.location.reload(); }}
+                className="inline-flex items-center justify-center rounded-md bg-secondary/10 px-3 py-1 text-sm text-secondary"
+              >
+                Rafraîchir token
+              </button>
+              <button
+                onClick={() => { logout(); window.location.reload(); }}
+                className="inline-flex items-center justify-center rounded-md bg-destructive/10 px-3 py-1 text-sm text-destructive"
+              >
+                Déconnexion
+              </button>
             </div>
           </div>
         </div>

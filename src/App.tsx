@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { ArrowUpDown, Settings } from 'lucide-react';
+import useAuth from '@/hooks/useAuth';
+import { Login } from '@/components/auth/Login';
+import { ArrowUpDown, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StatsCard } from '@/components/subscriptions/StatsCard';
 import { SubscriptionBubbles } from '@/components/subscriptions/SubscriptionBubbles';
@@ -8,6 +10,7 @@ import { SubscriptionListItem } from '@/components/subscriptions/SubscriptionLis
 import { AddSubscriptionDialog } from '@/components/subscriptions/AddSubscriptionDialog';
 import { SubscriptionDetailDialog } from '@/components/subscriptions/SubscriptionDetailDialog';
 import { SettingsDialog } from '@/components/SettingsDialog';
+// Logout button will be rendered below Settings in the sidebar/header when authenticated
 import { useSubscriptions } from '@/hooks/useSubscriptions';
 import {
   DropdownMenu,
@@ -18,6 +21,7 @@ import {
 import { SortOption, Subscription } from '@/types/subscription';
 
 function App() {
+  const auth = useAuth();
   const {
     subscriptions,
     upcomingSubscriptions,
@@ -30,9 +34,18 @@ function App() {
     getSubscriptionStats,
   } = useSubscriptions();
 
+  // App-level state hooks must be declared unconditionally to preserve hooks order
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [showYearly, setShowYearly] = useState(false);
+
+  if (auth.loading) {
+    return <div className="min-h-screen flex items-center justify-center">Chargement...</div>;
+  }
+
+  if (!auth.isAuthenticated) {
+    return <Login />;
+  }
 
   const handleSubscriptionClick = (subscription: Subscription) => {
     setSelectedSubscription(subscription);
@@ -88,8 +101,13 @@ function App() {
         </div>
 
         {/* Settings at bottom of sidebar */}
-        <div className="absolute bottom-6 left-6 right-6">
+        <div className="absolute bottom-6 left-6 right-6 space-y-2">
           <SettingsDialog />
+              <Button variant="ghost" size="sm" onClick={() => { auth.logout(); window.location.reload(); }}
+                className="inline-flex items-center justify-start w-full gap-2 rounded-md bg-destructive/10 px-3 py-1 text-sm text-destructive">
+                <LogOut className="h-4 w-4" />
+                Déconnexion
+              </Button>
         </div>
       </aside>
 
@@ -99,7 +117,15 @@ function App() {
           {/* Mobile Header */}
           <div className="mb-6 flex items-center justify-between lg:hidden">
             <h1 className="text-xl font-bold text-foreground">SubTracker</h1>
-            <SettingsDialog />
+            <div className="flex items-center gap-2">
+              <SettingsDialog />
+              <Button variant="ghost" size="sm" onClick={() => { auth.logout(); window.location.reload(); }}
+                className="inline-flex items-center justify-start gap-2 rounded-md bg-destructive/10 px-3 py-1 text-sm text-destructive">
+                <LogOut className="h-4 w-4" />
+                Déconnexion
+              </Button>
+              
+            </div>
           </div>
 
           {/* Mobile Stats Grid */}
