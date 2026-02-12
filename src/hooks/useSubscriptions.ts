@@ -1,6 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Subscription, SortOption } from '@/types/subscription';
-import { mockSubscriptions } from '@/data/mockSubscriptions';
 
 // Helper function to calculate months difference
 function differenceInMonths(dateLeft: Date, dateRight: Date): number {
@@ -16,25 +15,85 @@ export function differenceInDays(dateLeft: Date, dateRight: Date): number {
 }
 
 export function useSubscriptions() {
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>(mockSubscriptions);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const parseSubscription = (raw: any): Subscription => ({
+    ...raw,
+    nextPaymentDate: raw.nextPaymentDate ? new Date(raw.nextPaymentDate) : new Date(),
+    startDate: raw.startDate ? new Date(raw.startDate) : undefined,
+  });
+
+  const fetchSubscriptions = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
+
+    try {
+      const res = await fetch(`${API_BASE}/api/subscriptions`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setSubscriptions((data || []).map(parseSubscription));
+    } catch (err: any) {
+      setError(err.message || 'Erreur de récupération');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSubscriptions();
+  }, [fetchSubscriptions]);
   const [sortBy, setSortBy] = useState<SortOption>('recent');
 
-  const addSubscription = (newSub: Omit<Subscription, 'id'>) => {
-    const subscription: Subscription = {
-      ...newSub,
-      id: Date.now().toString(),
-    };
-    setSubscriptions((prev) => [...prev, subscription]);
+  const addSubscription = async (newSub: Omit<Subscription, 'id'>) => {
+    try {
+      const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
+
+      const res = await fetch(`${API_BASE}/api/subscriptions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSub),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const created = await res.json();
+      setSubscriptions((prev) => [...prev, parseSubscription(created)]);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to add subscription', err);
+    }
   };
 
-  const updateSubscription = (id: string, updates: Partial<Omit<Subscription, 'id'>>) => {
-    setSubscriptions((prev) =>
-      prev.map((sub) => (sub.id === id ? { ...sub, ...updates } : sub))
-    );
+  const updateSubscription = async (id: string, updates: Partial<Omit<Subscription, 'id'>>) => {
+    try {
+      const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
+
+      const res = await fetch(`${API_BASE}/api/subscriptions/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const updated = await res.json();
+      setSubscriptions((prev) => prev.map((sub) => (sub.id === id ? parseSubscription(updated) : sub)));
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to update subscription', err);
+    }
   };
 
-  const removeSubscription = (id: string) => {
-    setSubscriptions((prev) => prev.filter((sub) => sub.id !== id));
+  const removeSubscription = async (id: string) => {
+    try {
+      const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
+
+      const res = await fetch(`${API_BASE}/api/subscriptions/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setSubscriptions((prev) => prev.filter((sub) => sub.id !== id));
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to delete subscription', err);
+    }
   };
 
   const getSubscriptionStats = (subscription: Subscription) => {
@@ -101,5 +160,8 @@ export function useSubscriptions() {
     updateSubscription,
     removeSubscription,
     getSubscriptionStats,
+    loading,
+    error,
+    refetch: fetchSubscriptions,
   };
 }
