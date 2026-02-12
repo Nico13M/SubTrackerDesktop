@@ -32,6 +32,7 @@ function App() {
 
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [showYearly, setShowYearly] = useState(false);
 
   const handleSubscriptionClick = (subscription: Subscription) => {
     setSelectedSubscription(subscription);
@@ -68,13 +69,13 @@ function App() {
         <div className="space-y-4">
           <StatsCard
             value={`€${formatCurrency(stats.yearlyTotal)}`}
-            label="Moy. annuelle"
+            label="Total annuel"
             variant="primary"
             icon="yearly"
           />
           <StatsCard
             value={`€${formatCurrency(stats.monthlyTotal)}`}
-            label="Ce mois"
+            label="Par mois"
             variant="secondary"
             icon="monthly"
           />
@@ -106,7 +107,7 @@ function App() {
             <div className="space-y-3">
               <StatsCard
                 value={`€${formatCurrency(stats.yearlyTotal)}`}
-                label="Moy. annuelle"
+                label="Total annuel"
                 variant="primary"
                 icon="yearly"
               />
@@ -179,9 +180,13 @@ function App() {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-foreground lg:text-xl">Tous les abonnements</h2>
-                <p className="text-sm text-muted-foreground">
-                  Mensuel · €{formatCurrency(yearlyTotal)} / y
-                </p>
+                <button 
+                  onClick={() => setShowYearly(!showYearly)}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                >
+                  {showYearly ? 'Annuel' : 'Mensuel'} · €{formatCurrency(showYearly ? stats.yearlyTotal : stats.monthlyTotal)} {showYearly ? '/ an' : '/ mois'}
+                  <span className="ml-1 text-xs text-primary">(cliquer pour changer)</span>
+                </button>
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
