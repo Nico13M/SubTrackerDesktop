@@ -1,5 +1,6 @@
 import { Subscription } from '@/types/subscription';
-import { differenceInDays } from '@/hooks/useSubscriptions';
+import { differenceInDays, getDaysUntil } from '@/hooks/useSubscriptions';
+import { sub } from 'date-fns';
 
 interface UpcomingCardProps {
   subscription: Subscription;
@@ -7,11 +8,14 @@ interface UpcomingCardProps {
 }
 
 export function UpcomingCard({ subscription, onClick }: UpcomingCardProps) {
-  const daysUntilPayment = differenceInDays(subscription.nextPaymentDate, new Date());
+  console.log(subscription );
+  const daysUntilPayment = getDaysUntil(subscription.nextPaymentDate);
   const maxDays = 30;
-  const progress = Math.max(0, Math.min(100, ((maxDays - daysUntilPayment) / maxDays) * 100));
-  
-  const isUrgent = daysUntilPayment <= 3;
+  const clampedDays = Math.max(0, daysUntilPayment);
+  const progress = Math.max(0, Math.min(100, ((maxDays - clampedDays) / maxDays) * 100));
+
+  const isToday = daysUntilPayment === 0;
+  const isUrgent = daysUntilPayment < 4 && daysUntilPayment > 0;
 
   const monthlyPrice = subscription.billingCycle === 'yearly' 
     ? subscription.price / 12 
@@ -47,19 +51,25 @@ export function UpcomingCard({ subscription, onClick }: UpcomingCardProps) {
       
       <div className="mt-3 lg:mt-4">
         <div className="flex items-center justify-between">
-          <p className={`text-sm font-medium lg:text-base ${isUrgent ? 'text-warning' : 'text-muted-foreground'}`}>
-            {daysUntilPayment} jours restants
+          <p className={`text-sm font-medium lg:text-base ${isToday ? 'text-destructive' : isUrgent ? 'text-warning' : 'text-muted-foreground'}`}>
+            {isToday ? "Aujourd'hui" : `${daysUntilPayment} ${daysUntilPayment === 1 ? 'jour' : 'jours'} restants`}
           </p>
-          {isUrgent && (
-            <span className="hidden lg:inline-block rounded-full bg-warning/20 px-2 py-0.5 text-xs font-medium text-warning">
-              Bientôt
+          {daysUntilPayment === 0 ? (
+            <span className="inline-block rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-medium text-destructive">
+              Aujourd'hui
             </span>
+          ) : (
+            isUrgent && (
+              <span className="inline-block rounded-full bg-warning/20 px-2 py-0.5 text-xs font-medium text-warning">
+                Bientôt
+              </span>
+            )
           )}
         </div>
         <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-muted lg:h-1.5 lg:mt-2">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
-              isUrgent ? 'bg-warning' : 'bg-primary'
+              isToday ? 'bg-destructive' : isUrgent ? 'bg-warning' : 'bg-primary'
             }`}
             style={{ width: `${progress}%` }}
           />

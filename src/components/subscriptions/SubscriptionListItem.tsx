@@ -1,5 +1,5 @@
 import { Subscription } from '@/types/subscription';
-import { differenceInDays } from '@/hooks/useSubscriptions';
+import { differenceInDays, getDaysUntil } from '@/hooks/useSubscriptions';
 
 interface SubscriptionListItemProps {
   subscription: Subscription;
@@ -7,7 +7,7 @@ interface SubscriptionListItemProps {
 }
 
 export function SubscriptionListItem({ subscription, onClick }: SubscriptionListItemProps) {
-  const daysUntilPayment = differenceInDays(subscription.nextPaymentDate, new Date());
+  const daysUntilPayment = getDaysUntil(subscription.nextPaymentDate);
   
   const yearlyPrice = subscription.billingCycle === 'monthly' 
     ? subscription.price * 12 
@@ -50,12 +50,17 @@ export function SubscriptionListItem({ subscription, onClick }: SubscriptionList
           </div>
         </div>
         
-        <div className="text-right flex-shrink-0 lg:hidden">
-          <p className="text-sm text-muted-foreground">{daysUntilPayment} jours</p>
+          <div className="text-right flex-shrink-0 lg:hidden">
+          <p className={`${daysUntilPayment === 0 ? 'text-destructive' : 'text-muted-foreground'} text-sm`}>{daysUntilPayment === 0 ? "Aujourd'hui" : `${daysUntilPayment} ${daysUntilPayment === 1 ? 'jour' : 'jours'}`}</p>
+          {daysUntilPayment === 0 && (
+            <span className="inline-block mt-1 rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-medium text-destructive">
+              Aujourd'hui
+            </span>
+          )}
           <div className="mt-1 h-1 w-16 overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full rounded-full bg-muted-foreground/40"
-              style={{ width: `${Math.min(100, (daysUntilPayment / 30) * 100)}%` }}
+              className={`h-full rounded-full ${daysUntilPayment === 0 ? 'bg-destructive' : 'bg-muted-foreground/40'}`}
+              style={{ width: `${Math.min(100, (Math.max(0, daysUntilPayment) / 30) * 100)}%` }}
             />
           </div>
         </div>
@@ -77,11 +82,16 @@ export function SubscriptionListItem({ subscription, onClick }: SubscriptionList
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm font-medium text-foreground">{daysUntilPayment} jours</p>
+            <p className={`${daysUntilPayment === 0 ? 'text-destructive' : 'text-foreground'} text-sm font-medium`}>{daysUntilPayment === 0 ? "Aujourd'hui" : `${daysUntilPayment} ${daysUntilPayment === 1 ? 'jour' : 'jours'}`}</p>
+            {daysUntilPayment === 0 && (
+              <div className="mt-2">
+                <span className="inline-block rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-medium text-destructive">Aujourd'hui</span>
+              </div>
+            )}
             <div className="mt-1 h-1.5 w-20 overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full bg-primary"
-                style={{ width: `${Math.max(5, Math.min(100, (1 - daysUntilPayment / 30) * 100))}%` }}
+                className={`h-full rounded-full ${daysUntilPayment === 0 ? 'bg-destructive' : 'bg-primary'}`}
+                style={{ width: `${Math.max(5, Math.min(100, (1 - Math.max(0, daysUntilPayment) / 30) * 100))}%` }}
               />
             </div>
           </div>

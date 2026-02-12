@@ -10,8 +10,25 @@ function differenceInMonths(dateLeft: Date, dateRight: Date): number {
 
 // Helper function to calculate days difference
 export function differenceInDays(dateLeft: Date, dateRight: Date): number {
-  const diffTime = dateLeft.getTime() - dateRight.getTime();
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  // Calculate difference in whole calendar days (UTC) to avoid timezone and
+  // hour-of-day rounding issues. This returns the number of days from
+  // dateRight to dateLeft (can be negative if dateLeft is earlier).
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+  const utcLeft = Date.UTC(dateLeft.getFullYear(), dateLeft.getMonth(), dateLeft.getDate());
+  const utcRight = Date.UTC(dateRight.getFullYear(), dateRight.getMonth(), dateRight.getDate());
+  return Math.floor((utcLeft - utcRight) / MS_PER_DAY);
+}
+
+/**
+ * Retourne le nombre de jours entre aujourd'hui (ou `fromDate`) et `target`.
+ * - `target` peut être un `Date` ou une ISO string.
+ * - `inclusive = true` retournera `difference + 1` (compte inclusif).
+ */
+export function getDaysUntil(target: Date | string, fromDate?: Date, inclusive = false): number {
+  const from = fromDate ? new Date(fromDate) : new Date();
+  const targetDate = typeof target === 'string' ? new Date(target) : target;
+  const days = differenceInDays(targetDate, from);
+  return inclusive ? days + 1 : days;
 }
 
 export function useSubscriptions() {
@@ -19,11 +36,25 @@ export function useSubscriptions() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const parseSubscription = (raw: any): Subscription => ({
-    ...raw,
-    nextPaymentDate: raw.nextPaymentDate ? new Date(raw.nextPaymentDate) : new Date(),
-    startDate: raw.startDate ? new Date(raw.startDate) : undefined,
-  });
+  const parseSubscription = (raw: any): Subscription => {
+    const nextRaw = raw.nextPaymentDate ?? raw.next_payment_date ?? raw.next_payment ?? null;
+    const startRaw = raw.startDate ?? raw.start_date ?? null;
+    const billing = (raw.billingCycle ?? raw.billing_cycle) as 'monthly' | 'yearly' | undefined;
+
+    return {
+      id: String(raw.id ?? raw._id ?? Date.now()),
+      name: raw.name ?? raw.title ?? 'Untitled',
+      price: Number(raw.price ?? 0),
+      currency: raw.currency ?? '€',
+      billingCycle: billing ?? 'monthly',
+      nextPaymentDate: nextRaw ? new Date(nextRaw) : new Date(),
+      startDate: startRaw ? new Date(startRaw) : undefined,
+      category: raw.category ?? 'Other',
+      color: raw.color ?? 'hsl(220, 80%, 50%)',
+      icon: raw.icon ?? undefined,
+      imageUrl: raw.imageUrl ?? raw.image_url ?? undefined,
+    } as Subscription;
+  };
 
   const fetchSubscriptions = useCallback(async () => {
     setLoading(true);
@@ -130,7 +161,14 @@ export function useSubscriptions() {
   }, [subscriptions, sortBy]);
 
   const upcomingSubscriptions = useMemo(() => {
+    const now = new Date();
+    const MAX_DAYS = 30;
+
     return [...subscriptions]
+      .filter((sub) => {
+        const days = differenceInDays(sub.nextPaymentDate, now);
+        return days >= 0 && days <= MAX_DAYS;
+      })
       .sort((a, b) => a.nextPaymentDate.getTime() - b.nextPaymentDate.getTime())
       .slice(0, 4);
   }, [subscriptions]);
