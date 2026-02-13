@@ -33,7 +33,6 @@ function App() {
     removeSubscription,
     getSubscriptionStats,
   } = useSubscriptions();
-
   // App-level state hooks must be declared unconditionally to preserve hooks order
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -50,6 +49,13 @@ function App() {
   const handleSubscriptionClick = (subscription: Subscription) => {
     setSelectedSubscription(subscription);
     setDetailDialogOpen(true);
+  };
+
+  // Wrap updateSubscription so we can update the selectedSubscription immediately
+  const handleUpdate = async (id: string, updates: Partial<Omit<Subscription, 'id'>>) => {
+    const updated = await updateSubscription(id, updates as any);
+    if (updated) setSelectedSubscription(updated);
+    return updated;
   };
 
   const formatCurrency = (amount: number) => {
@@ -191,7 +197,9 @@ function App() {
           <section className="mb-8">
             <h2 className="mb-4 text-lg font-semibold text-foreground lg:text-xl">À venir</h2>
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0 lg:grid lg:grid-cols-4 lg:gap-4 lg:overflow-visible">
+              
               {upcomingSubscriptions.map((sub) => (
+                
                 <UpcomingCard 
                   key={sub.id} 
                   subscription={sub} 
@@ -266,7 +274,7 @@ function App() {
             subscription={selectedSubscription}
             open={detailDialogOpen}
             onOpenChange={setDetailDialogOpen}
-            onUpdate={updateSubscription}
+            onUpdate={handleUpdate}
             onDelete={removeSubscription}
             stats={selectedStats}
           />

@@ -31,6 +31,21 @@ export function getDaysUntil(target: Date | string, fromDate?: Date, inclusive =
   return inclusive ? days + 1 : days;
 }
 
+function parseISODate(raw?: string | Date | null): Date | undefined {
+  if (!raw) return undefined;
+  if (raw instanceof Date) return raw;
+  const s = String(raw);
+  // Normalize '+00:00' to 'Z' which is widely supported.
+  const normalized = s.endsWith('+00:00') ? s.replace('+00:00', 'Z') : s;
+  return new Date(normalized);
+}
+
+// Serialize Date to backend format: ISO with '+00:00' timezone suffix.
+function serializeDateForBackend(d?: Date | null): string | null {
+  if (!d) return null;
+  return d.toISOString().replace('Z', '+00:00');
+}
+
 export function useSubscriptions() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(false);
@@ -47,8 +62,8 @@ export function useSubscriptions() {
       price: Number(raw.price ?? 0),
       currency: raw.currency ?? '€',
       billingCycle: billing ?? 'monthly',
-      nextPaymentDate: nextRaw ? new Date(nextRaw) : new Date(),
-      startDate: startRaw ? new Date(startRaw) : undefined,
+      nextPaymentDate: nextRaw ? parseISODate(nextRaw) ?? new Date() : new Date(),
+      startDate: startRaw ? parseISODate(startRaw) : undefined,
       category: raw.category ?? 'Other',
       color: raw.color ?? 'hsl(220, 80%, 50%)',
       icon: raw.icon ?? undefined,
@@ -68,7 +83,14 @@ export function useSubscriptions() {
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      setSubscriptions((data || []).map(parseSubscription));
+      let items: any[] = [];
+      if (Array.isArray(data)) items = data;
+      else if (Array.isArray(data.subscriptions)) items = data.subscriptions;
+      else if (Array.isArray(data.data)) items = data.data;
+      else if (Array.isArray(data.items)) items = data.items;
+      else items = [];
+
+      setSubscriptions((items || []).map(parseSubscription));
     } catch (err: any) {
       setError(err.message || 'Erreur de récupération');
     } finally {
@@ -88,38 +110,130 @@ export function useSubscriptions() {
       const token = sessionStorage.getItem('subtracker_token');
       const headers: any = { 'Content-Type': 'application/json' };
       if (token) headers.Authorization = `Bearer ${token}`;
+
+      // Map frontend camelCase fields to backend/postgres snake_case columns
+      const payload: any = {
+        name: newSub.name,
+        price: newSub.price,
+        currency: newSub.currency,
+        billing_cycle: newSub.billingCycle,
+        next_payment_date: serializeDateForBackend(newSub.nextPaymentDate),
+        start_date: serializeDateForBackend(newSub.startDate),
+        category: newSub.category,
+        color: newSub.color,
+        icon: newSub.icon,
+        image_url: newSub.imageUrl ?? null,
+      };
+
       const res = await fetch(`${API_BASE}/api/subscriptions`, {
         method: 'POST',
         headers,
-        body: JSON.stringify(newSub),
+        body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const created = await res.json();
-      setSubscriptions((prev) => [...prev, parseSubscription(created)]);
+     // Normalize various possible response shapes
+      let newItem: any = created;
+      if (Array.isArray(created)) newItem = created[0];
+      else if (created.subscription) newItem = created.subscription;
+      else if (created.data && created.data.subscription) newItem = created.data.subscription;
+      else if (created.data && Array.isArray(created.data)) newItem = created.data[0];
+      else if (created.subscriptions && Array.isArray(created.subscriptions)) newItem = created.subscriptions[0];
+
+      setSubscriptions((prev) => [...prev, parseSubscription(newItem)]);
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Failed to add subscription', err);
     }
   };
 
-  const updateSubscription = async (id: string, updates: Partial<Omit<Subscription, 'id'>>) => {
+  const updateSubscription = async (id: string, updates: Partial<Omit<Subscription, 'id'>>): Promise<Subscription | null> => {
     try {
       const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
 
       const token = sessionStorage.getItem('subtracker_token');
       const headers: any = { 'Content-Type': 'application/json' };
       if (token) headers.Authorization = `Bearer ${token}`;
+      // Map update fields to snake_case
+      const payload: any = {};
+      if (updates.name !== undefined) payload.name = updates.name;
+      if (updates.price !== undefined) payload.price = updates.price;
+      if (updates.currency !== undefined) payload.currency = updates.currency;
+      if (updates.billingCycle !== undefined) payload.billing_cycle = updates.billingCycle;
+      if (updates.nextPaymentDate !== undefined) payload.next_payment_date = serializeDateForBackend(updates.nextPaymentDate as Date | null);
+      if (updates.startDate !== undefined) payload.start_date = serializeDateForBackend(updates.startDate as Date | null);
+      if (updates.category !== undefined) payload.category = updates.category;
+      if (updates.color !== undefined) payload.color = updates.color;
+      if (updates.icon !== undefined) payload.icon = updates.icon;
+      if (updates.imageUrl !== undefined) payload.image_url = updates.imageUrl;
+
       const res = await fetch(`${API_BASE}/api/subscriptions/${id}`, {
         method: 'PUT',
         headers,
-        body: JSON.stringify(updates),
+        body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+     if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const updated = await res.json();
-      setSubscriptions((prev) => prev.map((sub) => (sub.id === id ? parseSubscription(updated) : sub)));
+      // Debug: log raw PUT response
+      // eslint-disable-next-line no-console
+      console.debug(`PUT /api/subscriptions/${id} raw response`, updated);
+
+      // Normalize response shapes (similar to POST)
+      let updatedItem: any = updated;
+      if (Array.isArray(updated)) updatedItem = updated[0];
+      else if (updated.subscription) updatedItem = updated.subscription;
+      else if (updated.data && updated.data.subscription) updatedItem = updated.data.subscription;
+      else if (updated.data && Array.isArray(updated.data)) updatedItem = updated.data[0];
+      else if (updated.subscriptions && Array.isArray(updated.subscriptions)) updatedItem = updated.subscriptions[0];
+
+      let returnedParsed: Subscription | null = null;
+      setSubscriptions((prev) => {
+        const newSubs = prev.map((sub) => {
+          if (sub.id !== id) return sub;
+
+          const hasFields = updatedItem && (updatedItem.name || updatedItem.price || updatedItem.next_payment_date || updatedItem.nextPaymentDate || updatedItem.billing_cycle || updatedItem.billingCycle);
+
+          if (hasFields) {
+            const parsed = parseSubscription(updatedItem);
+            returnedParsed = parsed;
+            return parsed;
+          }
+
+          // Fallback: backend returned only minimal info (e.g. id). Merge local updates into existing subscription.
+          const mergedRaw: any = {
+            id: sub.id,
+            name: updates.name ?? sub.name,
+            price: updates.price ?? sub.price,
+            currency: updates.currency ?? sub.currency,
+            billingCycle: updates.billingCycle ?? sub.billingCycle,
+            nextPaymentDate: updates.nextPaymentDate ?? sub.nextPaymentDate,
+            startDate: updates.startDate ?? sub.startDate,
+            category: updates.category ?? sub.category,
+            color: updates.color ?? sub.color,
+            icon: updates.icon ?? sub.icon,
+            imageUrl: updates.imageUrl ?? sub.imageUrl,
+          };
+
+          // Debug: show merged fallback object
+          // eslint-disable-next-line no-console
+          console.debug('Merged fallback for subscription update', mergedRaw);
+
+          const parsed = parseSubscription(mergedRaw);
+          returnedParsed = parsed;
+          return parsed;
+        });
+
+        // Debug: log new subscriptions array after update
+        // eslint-disable-next-line no-console
+        console.debug('Subscriptions after local update', newSubs);
+
+        return newSubs;
+      });
+
+      return returnedParsed;
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Failed to update subscription', err);
+      return null;
     }
   };
 

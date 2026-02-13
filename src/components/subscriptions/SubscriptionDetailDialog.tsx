@@ -13,7 +13,7 @@ interface SubscriptionDetailDialogProps {
   subscription: Subscription | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (id: string, updates: Partial<Omit<Subscription, 'id'>>) => void;
+  onUpdate: (id: string, updates: Partial<Omit<Subscription, 'id'>>) => Promise<Subscription | null> | void;
   onDelete: (id: string) => void;
   stats: {
     monthlyPrice: number;
@@ -77,10 +77,10 @@ export function SubscriptionDetailDialog({
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!subscription || !name || !price || !category || !nextPaymentDate) return;
 
-    onUpdate(subscription.id, {
+    const res = await onUpdate(subscription.id, {
       name,
       price: parseFloat(price),
       billingCycle,
@@ -89,9 +89,12 @@ export function SubscriptionDetailDialog({
       nextPaymentDate: new Date(nextPaymentDate),
       imageUrl: imageUrl || undefined,
       icon: name.charAt(0).toUpperCase(),
-    });
+    } as Partial<Omit<Subscription, 'id'>>);
 
+    // If parent updated selectedSubscription, it will re-render the dialog with new values.
+    // Wait for the update to complete before leaving edit mode to ensure UI shows updated data.
     setIsEditing(false);
+    return res;
   };
 
   const handleDelete = () => {
