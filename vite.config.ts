@@ -1,8 +1,11 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import { fileURLToPath } from 'url'
 
 // https://vite.dev/config/
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 export default defineConfig(() => {
   // Prefer environment variable VITE_API_BASE (can be full URL or hostname).
   const envBase = process.env.VITE_API_BASE || process.env.VITE_API_HOST || '';
@@ -23,10 +26,10 @@ export default defineConfig(() => {
         },
       },
     },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
     },
-  },
   };
 });
