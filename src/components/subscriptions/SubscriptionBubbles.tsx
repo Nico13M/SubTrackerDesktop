@@ -12,10 +12,10 @@ export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps)
   const getBubbleSize = (price: number, billingCycle: string) => {
     const monthlyPrice = billingCycle === 'yearly' ? price / 12 : price;
     
-    if (monthlyPrice >= 100) return 'w-18 h-18 text-base';
-    if (monthlyPrice >= 50) return 'w-16 h-16 text-sm';
-    if (monthlyPrice >= 20) return 'w-12 h-12 text-sm';
-    if (monthlyPrice >= 10) return 'w-9 h-9 text-xs';
+    if (monthlyPrice >= 100) return 'w-14 h-14 text-base';
+    if (monthlyPrice >= 50) return 'w-10 h-10 text-sm';
+    if (monthlyPrice >= 20) return 'w-8 h-8 text-sm';
+    if (monthlyPrice >= 10) return 'w-6 h-6 text-xs';
     return 'w-8 h-8 text-xs';
   };
 
