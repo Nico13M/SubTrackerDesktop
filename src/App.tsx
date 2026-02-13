@@ -65,8 +65,7 @@ function App() {
     }).format(amount);
   };
 
-  const monthlySubscriptions = subscriptions.filter(s => s.billingCycle === 'monthly');
-  const yearlyTotal = monthlySubscriptions.reduce((acc, s) => acc + s.price * 12, 0);
+  
 
   const sortLabels: Record<SortOption, string> = {
     recent: 'Récent',

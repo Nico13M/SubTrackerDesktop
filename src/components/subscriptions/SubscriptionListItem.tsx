@@ -1,5 +1,5 @@
 import { Subscription } from '@/types/subscription';
-import { differenceInDays, getDaysUntil } from '@/hooks/useSubscriptions';
+import { getDaysUntil } from '@/hooks/useSubscriptions';
 
 interface SubscriptionListItemProps {
   subscription: Subscription;

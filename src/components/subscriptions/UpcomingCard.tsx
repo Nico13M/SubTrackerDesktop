@@ -1,6 +1,5 @@
 import { Subscription } from '@/types/subscription';
-import { differenceInDays, getDaysUntil } from '@/hooks/useSubscriptions';
-import { sub } from 'date-fns';
+import { getDaysUntil } from '@/hooks/useSubscriptions';
 
 interface UpcomingCardProps {
   subscription: Subscription;
