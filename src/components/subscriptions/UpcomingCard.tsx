@@ -8,7 +8,6 @@ interface UpcomingCardProps {
 }
 
 export function UpcomingCard({ subscription, onClick }: UpcomingCardProps) {
-  console.log(subscription );
   const daysUntilPayment = getDaysUntil(subscription.nextPaymentDate);
   const maxDays = 30;
   const clampedDays = Math.max(0, daysUntilPayment);
