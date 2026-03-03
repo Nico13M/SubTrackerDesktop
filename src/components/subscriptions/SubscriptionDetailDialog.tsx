@@ -330,7 +330,26 @@ export function SubscriptionDetailDialog({
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Prochain paiement</span>
                 <span className="font-medium">
-                  {format(subscription.nextPaymentDate, 'd MMMM yyyy', { locale: fr })}
+                  {(() => {
+                    const now = new Date();
+                    let nextDate = new Date(subscription.nextPaymentDate);
+                    nextDate.setHours(0,0,0,0);
+                    now.setHours(0,0,0,0);
+                    const originalDay = nextDate.getDate();
+                    let safety = 0;
+                    while (nextDate <= now && safety < 24) {
+                      const currentMonth = nextDate.getMonth();
+                      nextDate.setMonth(currentMonth + 1);
+                      // Si le jour a changé (ex: 31 -> 2), on force le dernier jour du mois
+                      if (nextDate.getDate() < originalDay) {
+                        nextDate.setDate(0); // dernier jour du mois précédent
+                      } else {
+                        nextDate.setDate(originalDay);
+                      }
+                      safety++;
+                    }
+                    return format(nextDate, 'd MMMM yyyy', { locale: fr });
+                  })()}
                 </span>
               </div>
               <div className="flex justify-between">
