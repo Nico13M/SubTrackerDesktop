@@ -288,13 +288,41 @@ export function useSubscriptions() {
     const now = new Date();
     const MAX_DAYS = 30;
 
+    // Pour chaque abonnement, calculer la prochaine échéance future
+    function getNextPaymentDate(sub: Subscription): Date {
+      let nextDate = new Date(sub.nextPaymentDate);
+      nextDate.setHours(0,0,0,0);
+      now.setHours(0,0,0,0);
+      const originalDay = nextDate.getDate();
+      let safety = 0;
+      while (nextDate <= now && safety < 24) {
+        const currentMonth = nextDate.getMonth();
+        nextDate.setMonth(currentMonth + 1);
+        if (nextDate.getDate() < originalDay) {
+          nextDate.setDate(0);
+        } else {
+          nextDate.setDate(originalDay);
+        }
+        safety++;
+      }
+      return nextDate;
+    }
+
     return [...subscriptions]
+      .map((sub) => ({
+        ...sub,
+        _nextPaymentDate: getNextPaymentDate(sub)
+      }))
       .filter((sub) => {
-        const days = differenceInDays(sub.nextPaymentDate, now);
+        const days = differenceInDays(sub._nextPaymentDate, now);
         return days >= 0 && days <= MAX_DAYS;
       })
-      .sort((a, b) => a.nextPaymentDate.getTime() - b.nextPaymentDate.getTime())
-      .slice(0, 4);
+      .sort((a, b) => a._nextPaymentDate.getTime() - b._nextPaymentDate.getTime())
+      .map((sub) => {
+        // On repasse à l'objet Subscription original
+        const { _nextPaymentDate, ...rest } = sub;
+        return rest as Subscription;
+      });
   }, [subscriptions]);
 
   const stats = useMemo(() => {

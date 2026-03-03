@@ -7,7 +7,24 @@ interface UpcomingCardProps {
 }
 
 export function UpcomingCard({ subscription, onClick }: UpcomingCardProps) {
-  const daysUntilPayment = getDaysUntil(subscription.nextPaymentDate);
+  // Calculer la prochaine échéance future
+  let nextPaymentDate = new Date(subscription.nextPaymentDate);
+  const now = new Date();
+  nextPaymentDate.setHours(0,0,0,0);
+  now.setHours(0,0,0,0);
+  const originalDay = nextPaymentDate.getDate();
+  let safety = 0;
+  while (nextPaymentDate <= now && safety < 24) {
+    const currentMonth = nextPaymentDate.getMonth();
+    nextPaymentDate.setMonth(currentMonth + 1);
+    if (nextPaymentDate.getDate() < originalDay) {
+      nextPaymentDate.setDate(0);
+    } else {
+      nextPaymentDate.setDate(originalDay);
+    }
+    safety++;
+  }
+  const daysUntilPayment = getDaysUntil(nextPaymentDate);
   const maxDays = 30;
   const clampedDays = Math.max(0, daysUntilPayment);
   const progress = Math.max(0, Math.min(100, ((maxDays - clampedDays) / maxDays) * 100));
@@ -21,7 +38,7 @@ export function UpcomingCard({ subscription, onClick }: UpcomingCardProps) {
 
   return (
     <div 
-      className="flex-shrink-0 rounded-2xl bg-card p-4 shadow-sm transition-all duration-300 hover:shadow-md min-w-[160px] cursor-pointer active:scale-[0.98] lg:min-w-0 lg:w-full lg:p-5"
+      className="flex-shrink-0 rounded-2xl bg-card p-4 shadow-sm transition-all duration-300 hover:shadow-md min-w-[160px] cursor-pointer active:scale-[0.98] lg:min-w-0 lg:p-5"
       onClick={onClick}
     >
       <div className="flex items-start gap-3">

@@ -195,10 +195,8 @@ function App() {
           {/* Coming Up Section */}
           <section className="mb-8">
             <h2 className="mb-4 text-lg font-semibold text-foreground lg:text-xl">À venir</h2>
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0 lg:grid lg:grid-cols-4 lg:gap-4 lg:overflow-visible">
-              
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0">
               {upcomingSubscriptions.map((sub) => (
-                
                 <UpcomingCard 
                   key={sub.id} 
                   subscription={sub} 
