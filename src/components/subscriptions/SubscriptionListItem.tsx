@@ -7,7 +7,25 @@ interface SubscriptionListItemProps {
 }
 
 export function SubscriptionListItem({ subscription, onClick }: SubscriptionListItemProps) {
-  const daysUntilPayment = getDaysUntil(subscription.nextPaymentDate);
+  // Toujours prendre la prochaine échéance future, même si la date initiale est dans le passé sur plusieurs mois
+  let nextPaymentDate = new Date(subscription.nextPaymentDate);
+  const now = new Date();
+  nextPaymentDate.setHours(0,0,0,0);
+  now.setHours(0,0,0,0);
+  const originalDay = nextPaymentDate.getDate();
+  let safety = 0;
+  while (nextPaymentDate <= now && safety < 24) { // max 2 ans de rattrapage
+    const currentMonth = nextPaymentDate.getMonth();
+    nextPaymentDate.setMonth(currentMonth + 1);
+    // Si le jour a changé (ex: 31 -> 2), on force le dernier jour du mois
+    if (nextPaymentDate.getDate() < originalDay) {
+      nextPaymentDate.setDate(0); // dernier jour du mois précédent
+    } else {
+      nextPaymentDate.setDate(originalDay);
+    }
+    safety++;
+  }
+  const daysUntilPayment = getDaysUntil(nextPaymentDate);
   
   const yearlyPrice = subscription.billingCycle === 'monthly' 
     ? subscription.price * 12 
