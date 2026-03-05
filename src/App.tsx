@@ -120,7 +120,7 @@ function App() {
       </aside>
 
       {/* Main content */}
-      <main className="lg:ml-64">
+      <main className="lg:ml-64 overflow-hidden">
         <div className="mx-auto max-w-6xl px-4 py-6 lg:px-8 lg:py-8">
           {/* Mobile Header */}
           <div className="mb-6 flex items-center justify-between lg:hidden">
@@ -201,14 +201,16 @@ function App() {
             <div className="mb-4 flex items-center justify-start">
               <span className="text-sm font-medium text-muted-foreground@ ">Total à venir: €{formatCurrency(upcomingTotal)}</span>
             </div>
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0">
-              {upcomingSubscriptions.map((sub) => (
-                <UpcomingCard 
-                  key={sub.id} 
-                  subscription={sub} 
-                  onClick={() => handleSubscriptionClick(sub)}
-                />
-              ))}
+            <div className="overflow-x-hidden">
+              <div className="flex gap-3 overflow-x-auto pb-2 px-4 lg:px-0 pr-6">
+                {upcomingSubscriptions.map((sub) => (
+                  <UpcomingCard 
+                    key={sub.id} 
+                    subscription={sub} 
+                    onClick={() => handleSubscriptionClick(sub)}
+                  />
+                ))}
+              </div>
             </div>
           </section>
 
