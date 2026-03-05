@@ -1,4 +1,5 @@
 import { Subscription } from '@/types/subscription';
+import { Icon } from '@iconify/react';
 
 interface SubscriptionBubblesProps {
   subscriptions: Subscription[];
@@ -33,24 +34,53 @@ export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps)
         const sizeClass = getBubbleSize(sub.price, sub.billingCycle);
         const monthlyPrice = getMonthlyPrice(sub);
         const yearlyPrice = getYearlyPrice(sub);
-        
+        const getIconPx = (sc: string) => {
+          if (sc.includes('w-14')) return 20;
+          if (sc.includes('w-10')) return 18;
+          if (sc.includes('w-8')) return 16;
+          if (sc.includes('w-6')) return 14;
+          return 16;
+        };
+        const iconPx = getIconPx(sizeClass);
+        const slugMap: Record<string, string> = {
+          disney: 'disney',
+          'disney+': 'disney',
+          'disney-plus': 'disney',
+          'disneyplus': 'disney',
+        };
         return (
           <div
             key={sub.id}
             className="relative group"
           >
+            
             {sub.imageUrl ? (
               <img
                 src={sub.imageUrl}
                 alt={sub.name}
                 className={`${sizeClass} rounded-full object-cover shadow-md ring-2 ring-background transition-all duration-300 hover:scale-110 hover:ring-primary hover:z-10 cursor-pointer`}
               />
+              
             ) : (
               <div
                 className={`${sizeClass} flex items-center justify-center rounded-full font-bold text-white shadow-md ring-2 ring-background transition-all duration-300 hover:scale-110 hover:ring-primary hover:z-10 cursor-pointer`}
                 style={{ backgroundColor: sub.color }}
               >
-                {sub.icon || sub.name.charAt(0).toUpperCase()}
+                {(() => {
+                  const iconVal = sub.icon;
+                  if (!iconVal) return sub.name.charAt(0).toUpperCase();
+                  if (typeof iconVal === 'string' && iconVal.trim().length <= 1) return sub.name.charAt(0).toUpperCase();
+                  const id = String(iconVal).toLowerCase();
+                  const candidate = slugMap[id] ?? id;
+                  try {
+                    if(candidate == 'disney'){
+                      return <Icon icon={'streamline-logos:disney-plus-logo-solid'} width={iconPx} height={iconPx} className="text-white" />;
+                    }
+                    return <Icon icon={`simple-icons:${candidate}`} width={iconPx} height={iconPx} className="text-white" />;
+                  } catch (e) {
+                    return sub.name.charAt(0).toUpperCase();
+                  }
+                })()}
               </div>
             )}
             
@@ -66,7 +96,19 @@ export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps)
                     className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
                     style={{ backgroundColor: sub.color }}
                   >
-                    {sub.icon || sub.name.charAt(0).toUpperCase()}
+                    {(() => {
+                      const iconVal = sub.icon;
+                      if (!iconVal) return sub.name.charAt(0).toUpperCase();
+                      if (typeof iconVal === 'string' && iconVal.trim().length <= 1) return sub.name.charAt(0).toUpperCase();
+                      const id = String(iconVal).toLowerCase();
+                      const candidate = slugMap[id] ?? id;
+                      try {
+                        console.log('Trying icon:', `simple-icons:${candidate}`);
+                        return <Icon icon={`simple-icons:${candidate}`} width={14} height={14} className="text-white" />;
+                      } catch (e) {
+                        return sub.name.charAt(0).toUpperCase();
+                      }
+                    })()}
                   </div>
                   <div>
                     <p className="font-semibold text-sm">{sub.name}</p>
@@ -76,6 +118,7 @@ export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps)
                 
                 <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
+                    
                     <span className="text-muted-foreground">Par mois</span>
                     <span className="font-medium">{sub.currency}{monthlyPrice.toFixed(2)}</span>
                   </div>

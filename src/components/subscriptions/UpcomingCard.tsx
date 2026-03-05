@@ -1,5 +1,9 @@
 import { Subscription } from '@/types/subscription';
 import { getDaysUntil } from '@/hooks/useSubscriptions';
+import SubscriptionAvatar from './SubscriptionAvatar';
+
+// Using Iconify via `Icon` component with simple-icons namespace.
+// We expect `subscription.icon` to be a normalized slug (e.g. 'netflix', 'spotify').
 
 interface UpcomingCardProps {
   subscription: Subscription;
@@ -42,20 +46,14 @@ export function UpcomingCard({ subscription, onClick }: UpcomingCardProps) {
       onClick={onClick}
     >
       <div className="flex items-start gap-3">
-        {subscription.imageUrl ? (
-          <img 
-            src={subscription.imageUrl} 
-            alt={subscription.name} 
-            className="h-12 w-12 rounded-xl object-cover lg:h-14 lg:w-14"
-          />
-        ) : (
-          <div
-            className="flex h-12 w-12 items-center justify-center rounded-xl text-lg font-bold text-primary-foreground lg:h-14 lg:w-14"
-            style={{ backgroundColor: subscription.color }}
-          >
-            {subscription.icon || subscription.name.charAt(0).toUpperCase()}
-          </div>
-        )}
+        <SubscriptionAvatar
+          name={subscription.name}
+          icon={subscription.icon}
+          imageUrl={subscription.imageUrl}
+          color={subscription.color}
+          sizeClass="h-12 w-12 rounded-xl lg:h-14 lg:w-14"
+          iconPx={18}
+        />
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-card-foreground truncate lg:text-lg">{subscription.name}</h3>
           <p className="text-sm text-muted-foreground lg:text-base">

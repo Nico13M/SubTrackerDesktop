@@ -56,6 +56,36 @@ export function useSubscriptions() {
     const startRaw = raw.startDate ?? raw.start_date ?? null;
     const billing = (raw.billingCycle ?? raw.billing_cycle) as 'monthly' | 'yearly' | undefined;
 
+    // Normalize icon value: accept brand ids (spotify, netflix...), initials, or full names.
+    function normalizeIcon(rawIcon: any, nameVal: string | undefined): string | undefined {
+      if (!rawIcon && !nameVal) return undefined;
+      const rawStr = rawIcon ? String(rawIcon).trim() : '';
+      const nameStr = nameVal ? String(nameVal).toLowerCase() : '';
+
+      const brands = ['spotify', 'netflix', 'amazon', 'apple', 'disney', 'youtube'];
+
+      // If rawIcon matches a known brand id, return it
+      const lowerRaw = rawStr.toLowerCase();
+      if (brands.includes(lowerRaw)) return lowerRaw;
+
+      // If rawIcon is a single letter, try to match by name or brand starting letter
+      if (rawStr.length === 1) {
+        // try match by explicit name
+        for (const b of brands) {
+          if (nameStr.includes(b) || b.charAt(0) === lowerRaw) return b;
+        }
+      }
+
+      // If rawIcon looks like a full name, try to map
+      for (const b of brands) {
+        if (rawStr.toLowerCase().includes(b) || nameStr.includes(b)) return b;
+      }
+
+      return rawIcon ? rawIcon : undefined;
+    }
+
+    const normalizedIcon = normalizeIcon(raw.icon ?? raw.icon_name ?? raw.iconName, raw.name ?? raw.title);
+
     return {
       id: String(raw.id ?? raw._id ?? Date.now()),
       name: raw.name ?? raw.title ?? 'Untitled',
@@ -66,7 +96,7 @@ export function useSubscriptions() {
       startDate: startRaw ? parseISODate(startRaw) : undefined,
       category: raw.category ?? 'Other',
       color: raw.color ?? 'hsl(220, 80%, 50%)',
-      icon: raw.icon ?? undefined,
+      icon: normalizedIcon,
       imageUrl: raw.imageUrl ?? raw.image_url ?? undefined,
     } as Subscription;
   };

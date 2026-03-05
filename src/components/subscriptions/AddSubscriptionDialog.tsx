@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, ImagePlus, X } from 'lucide-react';
+import { Icon } from '@iconify/react';
+import SubscriptionAvatar from './SubscriptionAvatar';
 import { Subscription } from '@/types/subscription';
 
 interface AddSubscriptionDialogProps {
@@ -32,6 +34,10 @@ const colors = [
   'hsl(38, 92%, 50%)',
   'hsl(280, 70%, 50%)',
   'hsl(340, 75%, 55%)',
+  'hsl(0, 0%, 0%)',
+  'hsl(226, 85%, 44%)',
+  'hsl(0, 100%, 50%)'
+
 ];
 
 export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
@@ -44,6 +50,16 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
   const [nextPaymentDate, setNextPaymentDate] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
+
+  const brands = [
+    { id: 'spotify', label: 'Spotify', color: '#1DB954', icon: 'simple-icons:spotify' },
+    { id: 'netflix', label: 'Netflix', color: '#E50914', icon: 'simple-icons:netflix' },
+    { id: 'amazon', label: 'Amazon', color: '#FF9900', icon: 'simple-icons:amazon' },
+    { id: 'apple', label: 'Apple', color: '#000000', icon: 'simple-icons:apple' },
+    { id: 'disney', label: 'Disney+', color: '#113CCF', icon: 'streamline-logos:disney-plus-logo-solid' },
+    { id: 'youtube', label: 'YouTube', color: '#FF0000', icon: 'simple-icons:youtube' },
+  ];
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -77,7 +93,7 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
       color,
       nextPaymentDate: new Date(nextPaymentDate),
       startDate: new Date(),
-      icon: name.charAt(0).toUpperCase(),
+      icon: selectedIcon || name.charAt(0).toUpperCase(),
       imageUrl: imageUrl || undefined,
     });
 
@@ -89,6 +105,7 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
     setColor(colors[0]);
     setNextPaymentDate('');
     setImageUrl('');
+    setSelectedIcon(null);
     setOpen(false);
   };
 
@@ -109,30 +126,37 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
           <div className="space-y-2">
             <Label>Image / Logo (optionnel)</Label>
             <div className="flex items-center gap-3">
-              {imageUrl ? (
-                <div className="relative">
-                  <img 
-                    src={imageUrl} 
-                    alt="Preview" 
-                    className="h-16 w-16 rounded-xl object-cover"
-                  />
+                {imageUrl ? (
+                  <div className="relative">
+                    <img
+                      src={imageUrl}
+                      alt="Preview"
+                      className="h-16 w-16 rounded-xl object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
                   <button
                     type="button"
-                    onClick={removeImage}
-                    className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center justify-center rounded-xl"
                   >
-                    <X className="h-3 w-3" />
+                    <SubscriptionAvatar
+                      name={name || ' '}
+                      icon={selectedIcon ?? undefined}
+                      imageUrl={undefined}
+                      color={color}
+                      sizeClass="h-16 w-16 rounded-xl"
+                      iconPx={20}
+                    />
                   </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex h-16 w-16 items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-primary"
-                >
-                  <ImagePlus className="h-6 w-6 text-muted-foreground" />
-                </button>
-              )}
+                )}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -143,6 +167,39 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
               <span className="text-sm text-muted-foreground">
                 Ajouter une image ou un logo
               </span>
+            </div>
+            <div className="pt-2">
+              <Label>Ou choisir une icône</Label>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {brands.map((b) => {
+                  return (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => { setSelectedIcon(b.id); setColor(b.color); }}
+                      className={`flex items-center gap-2 rounded-md px-2 py-1 text-sm transition-shadow border ${selectedIcon === b.id ? 'ring-2 ring-primary' : 'hover:shadow-sm'}`}
+                    >
+                      <SubscriptionAvatar
+                        name={b.label}
+                        icon={b.id}
+                        imageUrl={undefined}
+                        color={b.color}
+                        sizeClass="h-6 w-6 rounded-full"
+                        iconPx={12}
+                      />
+                      <span>{b.label}</span>
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => { setSelectedIcon(null); setColor(colors[0]); }}
+                  className={`flex items-center gap-2 rounded-md px-2 py-1 text-sm transition-shadow border ${selectedIcon === null ? 'ring-2 ring-primary' : 'hover:shadow-sm'}`}
+                >
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-gray-700">—</span>
+                  <span>Aucun</span>
+                </button>
+              </div>
             </div>
           </div>
 

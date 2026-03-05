@@ -1,5 +1,11 @@
 import { Subscription } from '@/types/subscription';
 import { getDaysUntil } from '@/hooks/useSubscriptions';
+import { Icon } from '@iconify/react';
+import SubscriptionAvatar from './SubscriptionAvatar';
+
+
+// Using Iconify via `Icon` component with simple-icons namespace.
+// We expect `subscription.icon` to be a normalized slug (e.g. 'netflix', 'spotify').
 
 interface SubscriptionListItemProps {
   subscription: Subscription;
@@ -41,20 +47,14 @@ export function SubscriptionListItem({ subscription, onClick }: SubscriptionList
       onClick={onClick}
     >
       <div className="flex items-center gap-4 lg:w-full w-full">
-        {subscription.imageUrl ? (
-          <img 
-            src={subscription.imageUrl} 
-            alt={subscription.name} 
-            className="h-10 w-10 flex-shrink-0 rounded-xl object-cover lg:h-16 lg:w-16"
+          <SubscriptionAvatar
+            name={subscription.name}
+            icon={subscription.icon}
+            imageUrl={subscription.imageUrl}
+            color={subscription.color}
+            sizeClass="h-10 w-10 flex-shrink-0 rounded-xl lg:h-16 lg:w-16"
+            iconPx={20}
           />
-        ) : (
-          <div
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-base font-bold text-primary-foreground lg:h-16 lg:w-16"
-            style={{ backgroundColor: subscription.color }}
-          >
-            {subscription.icon || subscription.name.charAt(0).toUpperCase()}
-          </div>
-        )}
         
         <div className="flex-1 min-w-0 lg:hidden">
           <h3 className="font-semibold text-card-foreground">{subscription.name}</h3>

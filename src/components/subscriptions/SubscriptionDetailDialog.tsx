@@ -8,6 +8,8 @@ import { Subscription } from '@/types/subscription';
 import { Trash2, ImagePlus, X, Calendar, TrendingUp, DollarSign } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Icon } from '@iconify/react';
+import SubscriptionAvatar from './SubscriptionAvatar';
 
 interface SubscriptionDetailDialogProps {
   subscription: Subscription | null;
@@ -44,6 +46,19 @@ const colors = [
   'hsl(38, 92%, 50%)',
   'hsl(280, 70%, 50%)',
   'hsl(340, 75%, 55%)',
+    'hsl(0, 0%, 0%)',
+    'hsl(226, 85%, 44%)',
+    'hsl(0, 100%, 50%)'
+  
+];
+
+const brands = [
+  { id: 'spotify', label: 'Spotify', color: '#1DB954', icon: 'simple-icons:spotify' },
+  { id: 'netflix', label: 'Netflix', color: '#E50914', icon: 'simple-icons:netflix' },
+  { id: 'amazon', label: 'Amazon', color: '#FF9900', icon: 'simple-icons:amazon' },
+  { id: 'apple', label: 'Apple', color: '#000000', icon: 'simple-icons:apple' },
+  { id: 'disney', label: 'Disney+', color: '#113CCF', icon: 'streamline-logos:disney-plus-logo-solid' },
+  { id: 'youtube', label: 'YouTube', color: '#FF0000', icon: 'simple-icons:youtube' },
 ];
 
 export function SubscriptionDetailDialog({
@@ -62,6 +77,7 @@ export function SubscriptionDetailDialog({
   const [color, setColor] = useState(colors[0]);
   const [nextPaymentDate, setNextPaymentDate] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const startEditing = () => {
@@ -73,6 +89,7 @@ export function SubscriptionDetailDialog({
       setColor(subscription.color);
       setNextPaymentDate(format(subscription.nextPaymentDate, 'yyyy-MM-dd'));
       setImageUrl(subscription.imageUrl || '');
+      setSelectedIcon(subscription.icon ?? null);
       setIsEditing(true);
     }
   };
@@ -88,7 +105,7 @@ export function SubscriptionDetailDialog({
       color,
       nextPaymentDate: new Date(nextPaymentDate),
       imageUrl: imageUrl || undefined,
-      icon: name.charAt(0).toUpperCase(),
+      icon: selectedIcon || name.charAt(0).toUpperCase(),
     } as Partial<Omit<Subscription, 'id'>>);
 
     // If parent updated selectedSubscription, it will re-render the dialog with new values.
@@ -131,20 +148,14 @@ export function SubscriptionDetailDialog({
       <DialogContent className="mx-2 sm:mx-auto sm:max-w-md max-w-full overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            {displayImageUrl ? (
-              <img 
-                src={displayImageUrl} 
-                alt={subscription.name} 
-                className="h-12 w-12 rounded-xl object-cover"
-              />
-            ) : (
-              <div
-                className="flex h-12 w-12 items-center justify-center rounded-xl text-lg font-bold text-primary-foreground"
-                style={{ backgroundColor: isEditing ? color : subscription.color }}
-              >
-                {(isEditing ? name : subscription.name).charAt(0).toUpperCase()}
-              </div>
-            )}
+            <SubscriptionAvatar
+              name={isEditing ? name : subscription.name}
+              icon={isEditing ? selectedIcon ?? subscription.icon : subscription.icon}
+              imageUrl={displayImageUrl}
+              color={isEditing ? color : subscription.color}
+              sizeClass="h-12 w-12 rounded-xl"
+              iconPx={20}
+            />
             {isEditing ? name : subscription.name}
           </DialogTitle>
         </DialogHeader>
@@ -174,7 +185,7 @@ export function SubscriptionDetailDialog({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex h-16 w-16 items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-primary"
+                    className="flex h-16 w-16 items-center justify-center rounded-xl border-2 border-dashed border-border hover:border-primary"
                   >
                     <ImagePlus className="h-6 w-6 text-muted-foreground" />
                   </button>
@@ -190,6 +201,36 @@ export function SubscriptionDetailDialog({
                   Ajouter une image ou un logo
                 </span>
               </div>
+              
+            <div className="pt-2">
+              <Label>Ou choisir une icône</Label>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {brands.map((b) => {
+                  const iconName = b.icon;
+                  return (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => { setSelectedIcon(b.id); setColor(b.color); }}
+                      className={`flex items-center gap-2 rounded-md px-2 py-1 text-sm transition-shadow border ${selectedIcon === b.id ? 'ring-2 ring-primary' : 'hover:shadow-sm'}`}
+                    >
+                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full text-white" style={{ backgroundColor: b.color }}>
+                        <Icon icon={iconName} className="h-4 w-4" width={16} height={16} />
+                      </span>
+                      <span>{b.label}</span>
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => { setSelectedIcon(null); setColor(subscription.color); }}
+                  className={`flex items-center gap-2 rounded-md px-2 py-1 text-sm transition-shadow border ${selectedIcon === null ? 'ring-2 ring-primary' : 'hover:shadow-sm'}`}
+                >
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-gray-700">—</span>
+                  <span>Aucun</span>
+                </button>
+              </div>
+            </div>
             </div>
 
             <div className="space-y-2">
