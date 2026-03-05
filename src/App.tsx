@@ -235,14 +235,14 @@ function App() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setSortBy('price')}>
+                    Prix
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setSortBy('recent')}>
                     Récent
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setSortBy('name')}>
                     Nom
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('price')}>
-                    Prix
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

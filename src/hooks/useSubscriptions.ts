@@ -101,7 +101,7 @@ export function useSubscriptions() {
   useEffect(() => {
     fetchSubscriptions();
   }, [fetchSubscriptions]);
-  const [sortBy, setSortBy] = useState<SortOption>('recent');
+  const [sortBy, setSortBy] = useState<SortOption>('price');
 
   const addSubscription = async (newSub: Omit<Subscription, 'id'>) => {
     try {
