@@ -286,9 +286,7 @@ export function useSubscriptions() {
 
   const upcomingSubscriptions = useMemo(() => {
     const now = new Date();
-    const MAX_DAYS = 30;
 
-    // Pour chaque abonnement, calculer la prochaine échéance future
     function getNextPaymentDate(sub: Subscription): Date {
       let nextDate = new Date(sub.nextPaymentDate);
       nextDate.setHours(0,0,0,0);
@@ -314,12 +312,11 @@ export function useSubscriptions() {
         _nextPaymentDate: getNextPaymentDate(sub)
       }))
       .filter((sub) => {
-        const days = differenceInDays(sub._nextPaymentDate, now);
-        return days >= 0 && days <= MAX_DAYS;
+        const d = sub._nextPaymentDate;
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
       })
       .sort((a, b) => a._nextPaymentDate.getTime() - b._nextPaymentDate.getTime())
       .map((sub) => {
-        // On repasse à l'objet Subscription original
         const { _nextPaymentDate, ...rest } = sub;
         return rest as Subscription;
       });
