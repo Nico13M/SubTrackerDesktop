@@ -103,13 +103,7 @@ export function SettingsDialog() {
           {/* Auth actions */}
           <div className="rounded-xl bg-muted/50 p-4">
             <h3 className="font-semibold mb-3">Compte</h3>
-            <div className="flex gap-2">
-              <button
-                onClick={async () => { await refresh(); window.location.reload(); }}
-                className="inline-flex items-center justify-center rounded-md bg-secondary/10 px-3 py-1 text-sm text-secondary"
-              >
-                Rafraîchir token
-              </button>
+            <div className="flex justify-center gap-2">
               <button
                 onClick={() => { logout(); window.location.reload(); }}
                 className="inline-flex items-center justify-center rounded-md bg-destructive/10 px-3 py-1 text-sm text-destructive"

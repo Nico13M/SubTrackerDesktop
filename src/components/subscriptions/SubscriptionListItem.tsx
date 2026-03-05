@@ -37,19 +37,19 @@ export function SubscriptionListItem({ subscription, onClick }: SubscriptionList
 
   return (
     <div 
-      className="flex items-center gap-4 rounded-2xl bg-card p-4 shadow-sm transition-all duration-300 hover:shadow-md cursor-pointer active:scale-[0.98] lg:flex-col lg:items-start lg:p-6"
+      className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-sm transition-all duration-300 hover:shadow-md cursor-pointer active:scale-[0.98] lg:flex-col lg:items-start lg:p-6"
       onClick={onClick}
     >
-      <div className="flex items-center gap-4 lg:w-full">
+      <div className="flex items-center gap-4 lg:w-full w-full">
         {subscription.imageUrl ? (
           <img 
             src={subscription.imageUrl} 
             alt={subscription.name} 
-            className="h-14 w-14 flex-shrink-0 rounded-xl object-cover lg:h-16 lg:w-16"
+            className="h-10 w-10 flex-shrink-0 rounded-xl object-cover lg:h-16 lg:w-16"
           />
         ) : (
           <div
-            className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl text-lg font-bold text-primary-foreground lg:h-16 lg:w-16"
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-base font-bold text-primary-foreground lg:h-16 lg:w-16"
             style={{ backgroundColor: subscription.color }}
           >
             {subscription.icon || subscription.name.charAt(0).toUpperCase()}
@@ -75,7 +75,7 @@ export function SubscriptionListItem({ subscription, onClick }: SubscriptionList
               Aujourd'hui
             </span>
           )}
-          <div className="mt-1 h-1 w-16 overflow-hidden rounded-full bg-muted">
+          <div className="mt-1 h-1.5 w-14 overflow-hidden rounded-full bg-muted">
             <div
               className={`h-full rounded-full ${daysUntilPayment === 0 ? 'bg-destructive' : 'bg-muted-foreground/40'}`}
               style={{ width: `${Math.min(100, (Math.max(0, daysUntilPayment) / 30) * 100)}%` }}
@@ -106,7 +106,7 @@ export function SubscriptionListItem({ subscription, onClick }: SubscriptionList
                 <span className="inline-block rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-medium text-destructive">Aujourd'hui</span>
               </div>
             )}
-            <div className="mt-1 h-1.5 w-20 overflow-hidden rounded-full bg-muted">
+            <div className="mt-1 h-1.5 w-16 overflow-hidden rounded-full bg-muted">
               <div
                 className={`h-full rounded-full ${daysUntilPayment === 0 ? 'bg-destructive' : 'bg-primary'}`}
                 style={{ width: `${Math.max(5, Math.min(100, (1 - Math.max(0, daysUntilPayment) / 30) * 100))}%` }}

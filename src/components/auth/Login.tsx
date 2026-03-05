@@ -35,7 +35,7 @@ export function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow">
+      <div className="w-full max-w-sm mx-4 rounded-2xl bg-card p-6 shadow">
         <h2 className="mb-4 text-xl font-bold">{isSignup ? 'Créer un compte' : 'Se connecter'}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           {isSignup && (

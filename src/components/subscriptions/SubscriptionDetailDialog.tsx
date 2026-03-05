@@ -128,7 +128,7 @@ export function SubscriptionDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="mx-2 sm:mx-auto sm:max-w-md max-w-full overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             {displayImageUrl ? (
@@ -284,7 +284,7 @@ export function SubscriptionDetailDialog({
           <div className="space-y-4">
             {/* Stats Cards */}
             {stats && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 ">
                 <div className="rounded-xl bg-muted/50 p-3">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <DollarSign className="h-4 w-4" />
