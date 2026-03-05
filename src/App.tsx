@@ -77,6 +77,9 @@ function App() {
     ? getSubscriptionStats(selectedSubscription) 
     : null;
 
+  // Total des prochains paiements (somme des montants listés dans `upcomingSubscriptions`)
+  const upcomingTotal = upcomingSubscriptions.reduce((sum, s) => sum + s.price, 0);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Sidebar for desktop */}
@@ -194,7 +197,10 @@ function App() {
 
           {/* Coming Up Section */}
           <section className="mb-8">
-            <h2 className="mb-4 text-lg font-semibold text-foreground lg:text-xl">À venir</h2>
+            <h2 className="text-lg font-semibold text-foreground lg:text-xl">À venir</h2>
+            <div className="mb-4 flex items-center justify-start">
+              <span className="text-sm font-medium text-muted-foreground@ ">Total à venir: €{formatCurrency(upcomingTotal)}</span>
+            </div>
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0">
               {upcomingSubscriptions.map((sub) => (
                 <UpcomingCard 
