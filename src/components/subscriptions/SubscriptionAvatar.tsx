@@ -73,11 +73,17 @@ export default function SubscriptionAvatar({
     case 'loyer':
         iconName = 'bi:house-fill';
         break;
+    case 'box':
+        iconName = 'pixelarticons:modem';
+        break;
+    case 'edf':
+        iconName = 'mage:electricity-fill';
+        break;
     default:
         iconName = `simple-icons:${candidate}`;
     }
 
-    const size = iconName === 'cbi:my-canal' ? 30 : (iconPx ?? 16);
+    const size = (iconName === 'cbi:my-canal' || iconName === 'mage:electricity-fill') ? 30 : (iconPx ?? 16);
 
     return (
     <div className={`${container} flex items-center justify-center font-bold text-white`} style={{ backgroundColor: color }}>

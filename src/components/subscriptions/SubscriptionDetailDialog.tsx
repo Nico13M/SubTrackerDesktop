@@ -61,6 +61,8 @@ const brands = [
   { id: 'youtube', label: 'YouTube', color: '#FF0000', icon: 'simple-icons:youtube' },
   { id: 'mycanal', label: 'MyCanal', color: '#000000', icon: 'cbi:my-canal' },
   { id: 'loyer', label: 'Loyer', color: '#239FFF', icon: 'bi:house-fill' },
+  { id: 'box', label: 'Box', color: '#FF0000', icon: 'pixelarticons:modem' },
+  { id: 'edf', label: 'EDF', color: '#FFC000', icon: 'mage:electricity-fill' },
 
 ];
 
