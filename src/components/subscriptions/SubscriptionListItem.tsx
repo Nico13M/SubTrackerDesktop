@@ -52,7 +52,7 @@ export function SubscriptionListItem({ subscription, onClick }: SubscriptionList
             icon={subscription.icon}
             color={subscription.color}
             sizeClass="h-10 w-10 flex-shrink-0 rounded-xl lg:h-16 lg:w-16"
-            iconPx={20}
+            iconPx={28}
           />
         
         <div className="flex-1 min-w-0 lg:hidden">

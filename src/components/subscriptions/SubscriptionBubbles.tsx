@@ -36,10 +36,10 @@ export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps)
         const monthlyPrice = getMonthlyPrice(sub);
         const yearlyPrice = getYearlyPrice(sub);
         const getIconPx = (sc: string) => {
-          if (sc.includes('w-14')) return 20;
-          if (sc.includes('w-10')) return 18;
-          if (sc.includes('w-8')) return 16;
-          if (sc.includes('w-6')) return 14;
+          if (sc.includes('w-14')) return 24;
+          if (sc.includes('w-10')) return 20;
+          if (sc.includes('w-8')) return 18;
+          if (sc.includes('w-6')) return 16;
           return 16;
         };
         const iconPx = getIconPx(sizeClass);
@@ -78,7 +78,7 @@ export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps)
                       name={sub.name}
                       icon={sub.icon}
                       color={sub.color}
-                      sizeClass="w-8 h-8 rounded-full"
+                      sizeClass="w-12 h-12 rounded-full"
                       iconPx={14}
                     />
                   </div>

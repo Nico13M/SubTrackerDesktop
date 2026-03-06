@@ -59,12 +59,12 @@ export default function SubscriptionAvatar({
   const candidate = slugMap[lower] ?? lower;
 
   const iconName = (candidate === 'disney' || candidate === 'disneyplus')
-    ? 'streamline-logos:disney-plus-logo-solid' : ((candidate === 'mycanal' || candidate === 'canal+' || candidate === 'canalplus') ? 'arcticons:mycanal'
+    ? 'streamline-logos:disney-plus-logo-solid' : ((candidate === 'mycanal' || candidate === 'canal+' || candidate === 'canalplus') ? 'cbi:my-canal'
     : `simple-icons:${candidate}`);
-
+console.log(iconName)
   return (
     <div className={`${container} flex items-center justify-center font-bold text-white`} style={{ backgroundColor: color }}>
-      <Icon icon={iconName} width={iconPx ?? 16} height={iconPx ?? 16} className="text-white" />
+      <Icon icon={iconName} width={iconName == 'cbi:my-canal' ? 30 : (iconPx ?? 24)} height={iconName == 'cbi:my-canal' ? 30 : (iconPx ?? 24)} className="text-white" />
     </div>
   );
 }

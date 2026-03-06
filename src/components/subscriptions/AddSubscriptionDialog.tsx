@@ -113,8 +113,8 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
                   name={name || ' '}
                   icon={selectedIcon ?? undefined}
                   color={color}
-                  sizeClass="h-12 w-12 rounded-xl"
-                  iconPx={20}
+                  sizeClass="h-14 w-14 rounded-xl"
+                  iconPx={24}
                 />
               </div>
             </div>
@@ -134,7 +134,7 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
                         icon={b.id}
                         color={b.color}
                         sizeClass="h-6 w-6 rounded-full"
-                        iconPx={12}
+                        iconPx={16}
                       />
                       <span>{b.label}</span>
                     </button>

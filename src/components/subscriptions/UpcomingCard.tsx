@@ -50,8 +50,8 @@ export function UpcomingCard({ subscription, onClick }: UpcomingCardProps) {
           name={subscription.name}
           icon={subscription.icon}
           color={subscription.color}
-          sizeClass="h-12 w-12 rounded-xl lg:h-14 lg:w-14"
-          iconPx={18}
+          sizeClass="h-20 w-20 rounded-xl lg:h-14 lg:w-14"
+          iconPx={28}
         />
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-card-foreground truncate lg:text-lg">{subscription.name}</h3>

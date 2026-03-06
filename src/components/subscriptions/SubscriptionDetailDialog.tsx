@@ -59,6 +59,7 @@ const brands = [
   { id: 'apple', label: 'Apple', color: '#000000', icon: 'simple-icons:apple' },
   { id: 'disney', label: 'Disney+', color: '#113CCF', icon: 'streamline-logos:disney-plus-logo-solid' },
   { id: 'youtube', label: 'YouTube', color: '#FF0000', icon: 'simple-icons:youtube' },
+  { id: 'mycanal', label: 'MyCanal', color: '#000000', icon: 'cbi:my-canal' },
 ];
 
 export function SubscriptionDetailDialog({
