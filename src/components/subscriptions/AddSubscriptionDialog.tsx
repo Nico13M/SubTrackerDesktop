@@ -93,7 +93,7 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
       color,
       nextPaymentDate: new Date(nextPaymentDate),
       startDate: new Date(),
-      icon: selectedIcon || name.charAt(0).toUpperCase(),
+      icon: selectedIcon ?? undefined,
       imageUrl: imageUrl || undefined,
     });
 

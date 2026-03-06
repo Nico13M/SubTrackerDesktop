@@ -68,12 +68,13 @@ export function useSubscriptions() {
       const lowerRaw = rawStr.toLowerCase();
       if (brands.includes(lowerRaw)) return lowerRaw;
 
-      // If rawIcon is a single letter, try to match by name or brand starting letter
+      // If rawIcon is a single letter, preserve it as an initial.
+      // Previously we attempted to map single letters to brand slugs
+      // (e.g. 'N' -> 'netflix'), which made user-chosen initials turn
+      // into brand icons. We now preserve single-character values so
+      // that initials remain initials.
       if (rawStr.length === 1) {
-        // try match by explicit name
-        for (const b of brands) {
-          if (nameStr.includes(b) || b.charAt(0) === lowerRaw) return b;
-        }
+        return rawStr;
       }
 
       // If rawIcon looks like a full name, try to map

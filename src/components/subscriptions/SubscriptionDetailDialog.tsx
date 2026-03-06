@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Subscription } from '@/types/subscription';
 import { Trash2, ImagePlus, X, Calendar, TrendingUp, DollarSign } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, sub } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Icon } from '@iconify/react';
 import SubscriptionAvatar from './SubscriptionAvatar';
@@ -82,6 +82,7 @@ export function SubscriptionDetailDialog({
 
   const startEditing = () => {
     if (subscription) {
+
       setName(subscription.name);
       setPrice(subscription.price.toString());
       setBillingCycle(subscription.billingCycle);
@@ -89,8 +90,9 @@ export function SubscriptionDetailDialog({
       setColor(subscription.color);
       setNextPaymentDate(format(subscription.nextPaymentDate, 'yyyy-MM-dd'));
       setImageUrl(subscription.imageUrl || '');
-      setSelectedIcon(subscription.icon ?? null);
+      setSelectedIcon(subscription.icon ?? subscription.name.charAt(0).toUpperCase());
       setIsEditing(true);
+      console.log(subscription.icon)
     }
   };
 
@@ -105,7 +107,7 @@ export function SubscriptionDetailDialog({
       color,
       nextPaymentDate: new Date(nextPaymentDate),
       imageUrl: imageUrl || undefined,
-      icon: selectedIcon || name.charAt(0).toUpperCase(),
+      icon: selectedIcon ?? undefined,
     } as Partial<Omit<Subscription, 'id'>>);
 
     // If parent updated selectedSubscription, it will re-render the dialog with new values.
@@ -142,7 +144,6 @@ export function SubscriptionDetailDialog({
   if (!subscription) return null;
 
   const displayImageUrl = isEditing ? imageUrl : subscription.imageUrl;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="mx-2 sm:mx-auto sm:max-w-md max-w-full overflow-hidden">
@@ -221,14 +222,15 @@ export function SubscriptionDetailDialog({
                     </button>
                   );
                 })}
-                <button
-                  type="button"
-                  onClick={() => { setSelectedIcon(null); setColor(subscription.color); }}
-                  className={`flex items-center gap-2 rounded-md px-2 py-1 text-sm transition-shadow border ${selectedIcon === null ? 'ring-2 ring-primary' : 'hover:shadow-sm'}`}
-                >
-                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-gray-700">—</span>
-                  <span>Aucun</span>
-                </button>
+                  <button
+                    type="button"
+                    
+                    onClick={() => { setSelectedIcon(String(name || subscription.name).charAt(0).toUpperCase()); setColor(subscription.color); }}
+                    className={`flex items-center gap-2 rounded-md px-2 py-1 text-sm transition-shadow border ${selectedIcon === String(name || subscription.name).charAt(0).toUpperCase() ? 'ring-2 ring-primary' : 'hover:shadow-sm'}`}
+                  >
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-gray-700">{String(name || subscription.name).charAt(0).toUpperCase()}</span>
+                    <span>Aucun</span>
+                  </button>
               </div>
             </div>
             </div>

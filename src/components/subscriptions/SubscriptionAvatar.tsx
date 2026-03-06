@@ -32,7 +32,7 @@ export default function SubscriptionAvatar({
       className={`${container} flex items-center justify-center font-bold text-white`}
       style={{ backgroundColor: color }}
     >
-      {String(name || '').charAt(0).toUpperCase()}
+      {String(name).charAt(0).toUpperCase()}
     </div>
   );
 
@@ -49,6 +49,11 @@ export default function SubscriptionAvatar({
   }
 
   const lower = String(icon).toLowerCase();
+  // Treat single-character icons or icons equal to the name initial as no-icon
+  const nameInitial = String(name).charAt(0).toLowerCase();
+  if (lower.trim().length <= 1 || lower === nameInitial) {
+    return renderInitial();
+  }
   const slugMap: Record<string, string> = {
     disney: 'disneyplus',
     'disney+': 'disneyplus',
@@ -62,7 +67,7 @@ export default function SubscriptionAvatar({
     const iconName = (candidate === 'disney' || candidate === 'disneyplus')
       ? 'streamline-logos:disney-plus-logo-solid'
       : `simple-icons:${candidate}`;
-
+console.log('Trying icon:', iconName);
     return (
       <div className={`${container} flex items-center justify-center font-bold text-white`} style={{ backgroundColor: color }}>
         <Icon icon={iconName} width={iconPx ?? 16} height={iconPx ?? 16} className="text-white" />
