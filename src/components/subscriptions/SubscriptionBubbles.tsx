@@ -1,5 +1,6 @@
 import { Subscription } from '@/types/subscription';
 import { Icon } from '@iconify/react';
+import SubscriptionAvatar from './SubscriptionAvatar';
 
 interface SubscriptionBubblesProps {
   subscriptions: Subscription[];
@@ -53,36 +54,13 @@ export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps)
             key={sub.id}
             className="relative group"
           >
-            
-            {sub.imageUrl ? (
-              <img
-                src={sub.imageUrl}
-                alt={sub.name}
-                className={`${sizeClass} rounded-full object-cover shadow-md ring-2 ring-background transition-all duration-300 hover:scale-110 hover:ring-primary hover:z-10 cursor-pointer`}
-              />
-              
-            ) : (
-              <div
-                className={`${sizeClass} flex items-center justify-center rounded-full font-bold text-white shadow-md ring-2 ring-background transition-all duration-300 hover:scale-110 hover:ring-primary hover:z-10 cursor-pointer`}
-                style={{ backgroundColor: sub.color }}
-              >
-                {(() => {
-                  const iconVal = sub.icon;
-                  if (!iconVal) return sub.name.charAt(0).toUpperCase();
-                  if (typeof iconVal === 'string' && iconVal.trim().length <= 1) return sub.name.charAt(0).toUpperCase();
-                  const id = String(iconVal).toLowerCase();
-                  const candidate = slugMap[id] ?? id;
-                  try {
-                    if(candidate == 'disney'){
-                      return <Icon icon={'streamline-logos:disney-plus-logo-solid'} width={iconPx} height={iconPx} className="text-white" />;
-                    }
-                    return <Icon icon={`simple-icons:${candidate}`} width={iconPx} height={iconPx} className="text-white" />;
-                  } catch (e) {
-                    return sub.name.charAt(0).toUpperCase();
-                  }
-                })()}
-              </div>
-            )}
+            <SubscriptionAvatar
+              name={sub.name}
+              icon={sub.icon}
+              color={sub.color}
+              sizeClass={`${sizeClass} rounded-full`}
+              iconPx={iconPx}
+            />
             
             {/* Popup au hover */}
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
@@ -96,19 +74,13 @@ export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps)
                     className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
                     style={{ backgroundColor: sub.color }}
                   >
-                    {(() => {
-                      const iconVal = sub.icon;
-                      if (!iconVal) return sub.name.charAt(0).toUpperCase();
-                      if (typeof iconVal === 'string' && iconVal.trim().length <= 1) return sub.name.charAt(0).toUpperCase();
-                      const id = String(iconVal).toLowerCase();
-                      const candidate = slugMap[id] ?? id;
-                      try {
-                        console.log('Trying icon:', `simple-icons:${candidate}`);
-                        return <Icon icon={`simple-icons:${candidate}`} width={14} height={14} className="text-white" />;
-                      } catch (e) {
-                        return sub.name.charAt(0).toUpperCase();
-                      }
-                    })()}
+                    <SubscriptionAvatar
+                      name={sub.name}
+                      icon={sub.icon}
+                      color={sub.color}
+                      sizeClass="w-8 h-8 rounded-full"
+                      iconPx={14}
+                    />
                   </div>
                   <div>
                     <p className="font-semibold text-sm">{sub.name}</p>

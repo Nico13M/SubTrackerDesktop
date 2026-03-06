@@ -98,7 +98,7 @@ export function useSubscriptions() {
       category: raw.category ?? 'Other',
       color: raw.color ?? 'hsl(220, 80%, 50%)',
       icon: normalizedIcon,
-      imageUrl: raw.imageUrl ?? raw.image_url ?? undefined,
+      // image support removed from UI; ignore any image fields
     } as Subscription;
   };
 
@@ -153,7 +153,6 @@ export function useSubscriptions() {
         category: newSub.category,
         color: newSub.color,
         icon: newSub.icon,
-        image_url: newSub.imageUrl ?? null,
       };
 
       const res = await fetch(`${API_BASE}/api/subscriptions`, {
@@ -195,7 +194,7 @@ export function useSubscriptions() {
       if (updates.category !== undefined) payload.category = updates.category;
       if (updates.color !== undefined) payload.color = updates.color;
       if (updates.icon !== undefined) payload.icon = updates.icon;
-      if (updates.imageUrl !== undefined) payload.image_url = updates.imageUrl;
+      // image updates removed from UI; ignore image updates
 
       const res = await fetch(`${API_BASE}/api/subscriptions/${id}`, {
         method: 'PUT',
@@ -241,7 +240,7 @@ export function useSubscriptions() {
             category: updates.category ?? sub.category,
             color: updates.color ?? sub.color,
             icon: updates.icon ?? sub.icon,
-            imageUrl: updates.imageUrl ?? sub.imageUrl,
+            // imageUrl removed from type and UI
           };
 
           // Debug: show merged fallback object

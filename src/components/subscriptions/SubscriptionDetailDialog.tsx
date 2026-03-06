@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Subscription } from '@/types/subscription';
-import { Trash2, ImagePlus, X, Calendar, TrendingUp, DollarSign } from 'lucide-react';
+import { Trash2, Calendar, TrendingUp, DollarSign } from 'lucide-react';
 import { format, sub } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Icon } from '@iconify/react';
@@ -76,9 +76,8 @@ export function SubscriptionDetailDialog({
   const [category, setCategory] = useState('');
   const [color, setColor] = useState(colors[0]);
   const [nextPaymentDate, setNextPaymentDate] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // fileInputRef kept for parity but image upload removed
 
   const startEditing = () => {
     if (subscription) {
@@ -89,7 +88,6 @@ export function SubscriptionDetailDialog({
       setCategory(subscription.category);
       setColor(subscription.color);
       setNextPaymentDate(format(subscription.nextPaymentDate, 'yyyy-MM-dd'));
-      setImageUrl(subscription.imageUrl || '');
       setSelectedIcon(subscription.icon ?? subscription.name.charAt(0).toUpperCase());
       setIsEditing(true);
       console.log(subscription.icon)
@@ -106,7 +104,6 @@ export function SubscriptionDetailDialog({
       category,
       color,
       nextPaymentDate: new Date(nextPaymentDate),
-      imageUrl: imageUrl || undefined,
       icon: selectedIcon ?? undefined,
     } as Partial<Omit<Subscription, 'id'>>);
 
@@ -123,27 +120,11 @@ export function SubscriptionDetailDialog({
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeImage = () => {
-    setImageUrl('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
+  // image upload removed from UI
 
   if (!subscription) return null;
 
-  const displayImageUrl = isEditing ? imageUrl : subscription.imageUrl;
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="mx-2 sm:mx-auto sm:max-w-md max-w-full overflow-hidden">
@@ -152,7 +133,6 @@ export function SubscriptionDetailDialog({
             <SubscriptionAvatar
               name={isEditing ? name : subscription.name}
               icon={isEditing ? selectedIcon ?? subscription.icon : subscription.icon}
-              imageUrl={displayImageUrl}
               color={isEditing ? color : subscription.color}
               sizeClass="h-12 w-12 rounded-xl"
               iconPx={20}
@@ -163,47 +143,7 @@ export function SubscriptionDetailDialog({
 
         {isEditing ? (
           <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-4">
-            {/* Image Upload */}
             <div className="space-y-2">
-              <Label>Image / Logo (optionnel)</Label>
-              <div className="flex items-center gap-3">
-                {imageUrl ? (
-                  <div className="relative">
-                    <img 
-                      src={imageUrl} 
-                      alt="Preview" 
-                      className="h-16 w-16 rounded-xl object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={removeImage}
-                      className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex h-16 w-16 items-center justify-center rounded-xl border-2 border-dashed border-border hover:border-primary"
-                  >
-                    <ImagePlus className="h-6 w-6 text-muted-foreground" />
-                  </button>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-                <span className="text-sm text-muted-foreground">
-                  Ajouter une image ou un logo
-                </span>
-              </div>
-              
-            <div className="pt-2">
               <Label>Ou choisir une icône</Label>
               <div className="mt-2 flex flex-wrap gap-2">
                 {brands.map((b) => {
@@ -232,8 +172,7 @@ export function SubscriptionDetailDialog({
                     <span>Aucun</span>
                   </button>
               </div>
-            </div>
-            </div>
+              </div>
 
             <div className="space-y-2">
               <Label htmlFor="edit-name">Nom</Label>

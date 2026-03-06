@@ -49,7 +49,6 @@ export function UpcomingCard({ subscription, onClick }: UpcomingCardProps) {
         <SubscriptionAvatar
           name={subscription.name}
           icon={subscription.icon}
-          imageUrl={subscription.imageUrl}
           color={subscription.color}
           sizeClass="h-12 w-12 rounded-xl lg:h-14 lg:w-14"
           iconPx={18}

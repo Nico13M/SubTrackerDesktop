@@ -50,7 +50,6 @@ export function SubscriptionListItem({ subscription, onClick }: SubscriptionList
           <SubscriptionAvatar
             name={subscription.name}
             icon={subscription.icon}
-            imageUrl={subscription.imageUrl}
             color={subscription.color}
             sizeClass="h-10 w-10 flex-shrink-0 rounded-xl lg:h-16 lg:w-16"
             iconPx={20}

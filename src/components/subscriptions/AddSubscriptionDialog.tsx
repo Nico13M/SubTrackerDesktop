@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, ImagePlus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import SubscriptionAvatar from './SubscriptionAvatar';
 import { Subscription } from '@/types/subscription';
@@ -48,7 +48,6 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
   const [category, setCategory] = useState('');
   const [color, setColor] = useState(colors[0]);
   const [nextPaymentDate, setNextPaymentDate] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
 
@@ -61,23 +60,7 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
     { id: 'youtube', label: 'YouTube', color: '#FF0000', icon: 'simple-icons:youtube' },
   ];
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeImage = () => {
-    setImageUrl('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
+  // image upload removed from UI
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,7 +77,6 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
       nextPaymentDate: new Date(nextPaymentDate),
       startDate: new Date(),
       icon: selectedIcon ?? undefined,
-      imageUrl: imageUrl || undefined,
     });
 
     // Reset form
@@ -104,7 +86,7 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
     setCategory('');
     setColor(colors[0]);
     setNextPaymentDate('');
-    setImageUrl('');
+    // imageUrl removed
     setSelectedIcon(null);
     setOpen(false);
   };
@@ -124,49 +106,17 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Image Upload */}
           <div className="space-y-2">
-            <Label>Image / Logo (optionnel)</Label>
+            <Label>Logo</Label>
             <div className="flex items-center gap-3">
-                {imageUrl ? (
-                  <div className="relative">
-                    <img
-                      src={imageUrl}
-                      alt="Preview"
-                      className="h-16 w-16 rounded-xl object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={removeImage}
-                      className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center justify-center rounded-xl"
-                  >
-                    <SubscriptionAvatar
-                      name={name || ' '}
-                      icon={selectedIcon ?? undefined}
-                      imageUrl={undefined}
-                      color={color}
-                      sizeClass="h-16 w-16 rounded-xl"
-                      iconPx={20}
-                    />
-                  </button>
-                )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              <span className="text-sm text-muted-foreground">
-                Ajouter une image ou un logo
-              </span>
+              <div>
+                <SubscriptionAvatar
+                  name={name || ' '}
+                  icon={selectedIcon ?? undefined}
+                  color={color}
+                  sizeClass="h-12 w-12 rounded-xl"
+                  iconPx={20}
+                />
+              </div>
             </div>
             <div className="pt-2">
               <Label>Ou choisir une icône</Label>
@@ -182,7 +132,6 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
                       <SubscriptionAvatar
                         name={b.label}
                         icon={b.id}
-                        imageUrl={undefined}
                         color={b.color}
                         sizeClass="h-6 w-6 rounded-full"
                         iconPx={12}

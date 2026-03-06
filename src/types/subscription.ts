@@ -9,7 +9,6 @@ export interface Subscription {
   category: string;
   color: string;
   icon?: string;
-  imageUrl?: string;
 }
 
 export type SortOption = 'recent' | 'name' | 'price';
