@@ -1,5 +1,4 @@
 import { Subscription } from '@/types/subscription';
-import { Icon } from '@iconify/react';
 import SubscriptionAvatar from './SubscriptionAvatar';
 
 interface SubscriptionBubblesProps {
@@ -43,12 +42,7 @@ export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps)
           return 16;
         };
         const iconPx = getIconPx(sizeClass);
-        const slugMap: Record<string, string> = {
-          disney: 'disney',
-          'disney+': 'disney',
-          'disney-plus': 'disney',
-          'disneyplus': 'disney',
-        };
+
         return (
           <div
             key={sub.id}

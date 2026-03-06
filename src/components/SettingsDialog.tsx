@@ -10,7 +10,7 @@ export function SettingsDialog() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const { stats } = useSubscriptions();
-  const { logout, refresh } = useAuth();
+  const { logout } = useAuth();
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

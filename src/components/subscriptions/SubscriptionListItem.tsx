@@ -1,6 +1,5 @@
 import { Subscription } from '@/types/subscription';
 import { getDaysUntil } from '@/hooks/useSubscriptions';
-import { Icon } from '@iconify/react';
 import SubscriptionAvatar from './SubscriptionAvatar';
 
 

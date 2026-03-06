@@ -1,4 +1,3 @@
-import React from 'react';
 import { Icon } from '@iconify/react';
 
 interface SubscriptionAvatarProps {
@@ -12,7 +11,6 @@ interface SubscriptionAvatarProps {
     className?: string;
   // pixel size for the svg icon
     iconPx?: number;
-    alt?: string;
 }
 
 export default function SubscriptionAvatar({
@@ -23,7 +21,6 @@ export default function SubscriptionAvatar({
     sizeClass = 'w-8 h-8',
     className = '',
     iconPx,
-    alt,
 }: SubscriptionAvatarProps) {
     const container = `${sizeClass} ${className}`.trim();
 

@@ -1,11 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
-import { Icon } from '@iconify/react';
+
 import SubscriptionAvatar from './SubscriptionAvatar';
 import { Subscription } from '@/types/subscription';
 
@@ -48,7 +48,7 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
   const [category, setCategory] = useState('');
   const [color, setColor] = useState(colors[0]);
   const [nextPaymentDate, setNextPaymentDate] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
 
   const brands = [
