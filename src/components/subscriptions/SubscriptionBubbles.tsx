@@ -1,5 +1,7 @@
 import { Subscription } from '@/types/subscription';
 import SubscriptionAvatar from './SubscriptionAvatar';
+import { useState } from 'react';
+import { AnimatePresence, motion, useMotionValue, useTransform } from 'framer-motion';
 
 interface SubscriptionBubblesProps {
   subscriptions: Subscription[];
@@ -8,6 +10,9 @@ interface SubscriptionBubblesProps {
 export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps) {
   const displaySubs = subscriptions.slice(0, 6);
   const remaining = subscriptions.length - displaySubs.length;
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const pointerX = useMotionValue(0);
+  const tooltipShift = useTransform(pointerX, [-120, 120], [-8, 8]);
 
   // Calcul de la taille basée sur le prix
   const getBubbleSize = (price: number, billingCycle: string) => {
@@ -44,9 +49,21 @@ export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps)
         const iconPx = getIconPx(sizeClass);
 
         return (
-          <div
+          <motion.div
             key={sub.id}
-            className="relative group"
+            className="relative"
+            initial={false}
+            whileHover={{ y: -1 }}
+            whileTap={{ scale: 0.98 }}
+            onMouseEnter={() => setHoveredId(sub.id)}
+            onMouseLeave={() => {
+              setHoveredId((current) => (current === sub.id ? null : current));
+              pointerX.set(0);
+            }}
+            onMouseMove={(event) => {
+              const bounds = event.currentTarget.getBoundingClientRect();
+              pointerX.set(event.clientX - (bounds.left + bounds.width / 2));
+            }}
           >
             <SubscriptionAvatar
               name={sub.name}
@@ -57,55 +74,69 @@ export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps)
             />
             
             {/* Popup au hover */}
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
-              <div className="bg-popover text-popover-foreground rounded-xl shadow-xl border border-border p-3 min-w-[160px]">
-                {/* Flèche */}
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-popover"></div>
-                
-                {/* Contenu */}
-                <div className="flex items-center gap-2 mb-2">
-                  <div 
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                    style={{ backgroundColor: sub.color }}
-                  >
-                    <SubscriptionAvatar
-                      name={sub.name}
-                      icon={sub.icon}
-                      color={sub.color}
-                      sizeClass="w-12 h-12 rounded-full"
-                      iconPx={14}
-                    />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm">{sub.name}</p>
-                    <p className="text-xs text-muted-foreground">{sub.category}</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-1 text-xs">
-                  <div className="flex justify-between">
+            <AnimatePresence initial={false}>
+              {hoveredId === sub.id && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 6 }}
+                  className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 pointer-events-none"
+                  style={{ x: tooltipShift }}
+                >
+                  <div className="bg-popover text-popover-foreground rounded-xl shadow-xl border border-border p-3 min-w-[160px]">
+                    {/* Flèche */}
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-popover"></div>
                     
-                    <span className="text-muted-foreground">Par mois</span>
-                    <span className="font-medium">{sub.currency}{monthlyPrice.toFixed(2)}</span>
+                    {/* Contenu */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <div 
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                        style={{ backgroundColor: sub.color }}
+                      >
+                        <SubscriptionAvatar
+                          name={sub.name}
+                          icon={sub.icon}
+                          color={sub.color}
+                          sizeClass="w-12 h-12 rounded-full"
+                          iconPx={14}
+                        />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm">{sub.name}</p>
+                        <p className="text-xs text-muted-foreground">{sub.category}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-1 text-xs">
+                      <div className="flex justify-between">
+                        
+                        <span className="text-muted-foreground">Par mois</span>
+                        <span className="font-medium">{sub.currency}{monthlyPrice.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Par an</span>
+                        <span className="font-medium">{sub.currency}{yearlyPrice.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between pt-1 border-t border-border/50">
+                        <span className="text-muted-foreground">Facturation</span>
+                        <span className="font-medium">{sub.billingCycle === 'monthly' ? 'Mensuelle' : 'Annuelle'}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Par an</span>
-                    <span className="font-medium">{sub.currency}{yearlyPrice.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between pt-1 border-t border-border/50">
-                    <span className="text-muted-foreground">Facturation</span>
-                    <span className="font-medium">{sub.billingCycle === 'monthly' ? 'Mensuelle' : 'Annuelle'}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         );
       })}
       {remaining > 0 && (
-        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-muted text-muted-foreground text-xs font-medium shadow-md ring-2 ring-background">
+        <motion.div
+          initial={false}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-muted text-muted-foreground text-xs font-medium shadow-md ring-2 ring-background"
+        >
           +{remaining}
-        </div>
+        </motion.div>
       )}
     </div>
   );

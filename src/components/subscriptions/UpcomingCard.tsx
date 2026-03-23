@@ -1,6 +1,7 @@
 import { Subscription } from '@/types/subscription';
 import { getDaysUntil } from '@/hooks/useSubscriptions';
 import SubscriptionAvatar from './SubscriptionAvatar';
+import { AnimatePresence, motion } from 'framer-motion';
 
 // Using Iconify via `Icon` component with simple-icons namespace.
 // We expect `subscription.icon` to be a normalized slug (e.g. 'netflix', 'spotify').
@@ -41,9 +42,13 @@ export function UpcomingCard({ subscription, onClick }: UpcomingCardProps) {
     : subscription.price;
 
   return (
-    <div 
+    <motion.div
       className="flex-shrink-0 rounded-2xl bg-card p-4 shadow-sm transition-all duration-300 hover:shadow-md min-w-[160px] cursor-pointer active:scale-[0.98] lg:min-w-0 lg:p-5"
       onClick={onClick}
+      layout
+      initial={false}
+      whileHover={{ y: -1 }}
+      whileTap={{ scale: 0.99 }}
     >
       <div className="flex items-start gap-3">
         <SubscriptionAvatar
@@ -66,27 +71,41 @@ export function UpcomingCard({ subscription, onClick }: UpcomingCardProps) {
           <p className={`text-sm font-medium lg:text-base ${isToday ? 'text-destructive' : isUrgent ? 'text-warning' : 'text-muted-foreground'}`}>
             {isToday ? "Aujourd'hui" : `${daysUntilPayment} ${daysUntilPayment === 1 ? 'jour' : 'jours'} restants`}
           </p>
-          {daysUntilPayment === 0 ? (
-            <span className="inline-block rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-medium text-destructive">
-              Aujourd'hui
-            </span>
-          ) : (
-            isUrgent && (
-              <span className="inline-block rounded-full bg-warning/20 px-2 py-0.5 text-xs font-medium text-warning">
+          <AnimatePresence initial={false} mode="wait">
+            {daysUntilPayment === 0 ? (
+              <motion.span
+                key="today"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                className="inline-block rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-medium text-destructive"
+              >
+                Aujourd'hui
+              </motion.span>
+            ) : isUrgent ? (
+              <motion.span
+                key="soon"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                className="inline-block rounded-full bg-warning/20 px-2 py-0.5 text-xs font-medium text-warning"
+              >
                 Bientôt
-              </span>
-            )
-          )}
+              </motion.span>
+            ) : null}
+          </AnimatePresence>
         </div>
         <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-muted lg:h-1.5 lg:mt-2">
-          <div
+          <motion.div
             className={`h-full rounded-full transition-all duration-500 ${
               isToday ? 'bg-destructive' : isUrgent ? 'bg-warning' : 'bg-primary'
             }`}
-            style={{ width: `${progress}%` }}
+            initial={false}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
           />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
