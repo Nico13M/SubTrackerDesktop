@@ -18,7 +18,8 @@ export function UpcomingCard({ subscription, onClick }: UpcomingCardProps) {
   now.setHours(0,0,0,0);
   const originalDay = nextPaymentDate.getDate();
   let safety = 0;
-  while (nextPaymentDate <= now && safety < 24) {
+  // On ne saute au mois suivant que si la date est strictement avant aujourd'hui
+  while (nextPaymentDate < now && safety < 24) {
     const currentMonth = nextPaymentDate.getMonth();
     nextPaymentDate.setMonth(currentMonth + 1);
     if (nextPaymentDate.getDate() < originalDay) {
@@ -66,7 +67,7 @@ export function UpcomingCard({ subscription, onClick }: UpcomingCardProps) {
           <p className={`text-sm font-medium lg:text-base ${isToday ? 'text-destructive' : isUrgent ? 'text-warning' : 'text-muted-foreground'}`}>
             {isToday ? "Aujourd'hui" : `${daysUntilPayment} ${daysUntilPayment === 1 ? 'jour' : 'jours'} restants`}
           </p>
-          {daysUntilPayment === 0 ? (
+          {(isToday || daysUntilPayment === 0) ? (
             <span className="inline-block rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-medium text-destructive">
               Aujourd'hui
             </span>

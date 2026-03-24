@@ -323,7 +323,7 @@ export function useSubscriptions() {
       now.setHours(0,0,0,0);
       const originalDay = nextDate.getDate();
       let safety = 0;
-      while (nextDate <= now && safety < 24) {
+      while (nextDate < now && safety < 24) {
         const currentMonth = nextDate.getMonth();
         nextDate.setMonth(currentMonth + 1);
         if (nextDate.getDate() < originalDay) {
@@ -343,7 +343,11 @@ export function useSubscriptions() {
       }))
       .filter((sub) => {
         const d = sub._nextPaymentDate;
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        // Inclure aussi les abonnements dont la prochaine échéance est aujourd'hui
+        return (
+          (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) ||
+          d.getTime() === now.getTime()
+        );
       })
       .sort((a, b) => a._nextPaymentDate.getTime() - b._nextPaymentDate.getTime())
       .map((sub) => {
