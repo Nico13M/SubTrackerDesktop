@@ -1,12 +1,16 @@
 import useAuth from './useAuth';
 import { useSubscriptions } from './useSubscriptions';
 import { Subscription } from '@/types/subscription';
+import emailjs from '@emailjs/browser';
 
 export function useNotifications() {
   const { user } = useAuth();
   const { subscriptions } = useSubscriptions();
 
   const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
+  const SERVICE_ID: string = (import.meta as any).env?.VITE_EMAILJS_SERVICE_ID || 'YOUR_EMAILJS_SERVICE_ID';
+  const TEMPLATE_ID: string = (import.meta as any).env?.VITE_EMAILJS_TEMPLATE_ID || 'YOUR_EMAILJS_TEMPLATE_ID';
+  const PUBLIC_KEY: string = (import.meta as any).env?.VITE_EMAILJS_PUBLIC_KEY || 'YOUR_EMAILJS_PUBLIC_KEY';
 
   const sendNotificationEmail = async (sub: Subscription) => {
     if (!user) {
@@ -15,29 +19,21 @@ export function useNotifications() {
     }
 
     try {
-      const token = sessionStorage.getItem('subtracker_token');
-      const response = await fetch(`${API_BASE}/api/notification`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          email: user.email,
-          subscription_name: sub.name,
-          amount: sub.price,
-          due_date: sub.nextPaymentDate,
-        }),
-      });
+      // Remplace ces valeurs par tes propres identifiants EmailJS
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to send notification');
-      }
+      const templateParams = {
+        to_name: user.name || user.email,
+        to_email: user.email,
+        subscription_name: sub.name,
+        amount: sub.price,
+        due_date: sub.nextPaymentDate,
+        app_url: window.location.origin,
+      };
 
-      return await response.json();
+      await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
+      console.log('Notification email envoyée via EmailJS', templateParams);
     } catch (error) {
-      console.error('Error sending notification:', error);
+      console.error('Erreur lors de l\'envoi de l\'email EmailJS:', error);
       throw error;
     }
   };

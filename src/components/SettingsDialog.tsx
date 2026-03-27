@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,22 @@ import useAuth from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 
 export function SettingsDialog() {
+  // Pour test : import de useNotifications
+ const { sendNotificationEmail } = useNotifications();
 
+  // Fonction de test pour envoyer un email avec des valeurs fictives
+  const handleTestEmail = async () => {
+    await sendNotificationEmail({
+      name: 'Netflix',
+      price: 12.99,
+      nextPaymentDate: new Date().toISOString().slice(0, 10),
+      id: 'test',
+      icon: '',
+      color: '',
+      recurrence: 'mensuel',
+      category: 'Streaming',
+    });
+  };
     // Fonction pour récupérer la valeur notificationsEnabled depuis l'API
     const fetchNotificationSetting = async () => {
       console.log('Étape 1 : requête en BDD pour notificationsEnabled...');
@@ -115,6 +131,15 @@ export function SettingsDialog() {
                       notificationsEnabled ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
+                </button>
+              </div>
+              {/* Bouton de test EmailJS */}
+              <div className="flex justify-center mt-4">
+                <button
+                  onClick={handleTestEmail}
+                  className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-1 text-sm text-white shadow"
+                >
+                  Tester l'envoi d'email
                 </button>
               </div>
             </div>
