@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-type User = { id: string; email: string; name?: string } | null;
+type User = { id: string; email: string; name?: string, notificationsEnabled?: boolean } | null;
 
 export function useAuth() {
   const [user, setUser] = useState<User>(null);
@@ -135,6 +135,37 @@ export function useAuth() {
     }
   };
 
+  const updateUserSettings = async (settings: { notificationsEnabled: boolean }) => {
+    const token = getToken();
+    if (!token) return { ok: false, error: 'No token' };
+
+    try {
+      const res = await fetch(`${API_BASE}/api/user/settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(settings),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      // Optionally update user state if the backend returns the updated user
+      if (data.user) {
+        setUser(data.user);
+      }
+      return { ok: true, user: data.user };
+    } catch (err: any) {
+      console.error('Failed to update user settings:', err.message);
+      return { ok: false, error: err.message };
+    }
+  };
+
   useEffect(() => {
     fetchMe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -150,6 +181,8 @@ export function useAuth() {
     logout,
     isAuthenticated: !!user,
     fetchMe,
+    getToken,
+    updateUserSettings,
   };
 }
 
