@@ -8,11 +8,8 @@ import useAuth from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 
 export function SettingsDialog() {
-
-  // Fonction de test pour envoyer un email avec des valeurs fictives
     // Fonction pour récupérer la valeur notificationsEnabled depuis l'API
     const fetchNotificationSetting = async () => {
-      console.log('Étape 1 : requête en BDD pour notificationsEnabled...');
       try {
         const token = sessionStorage.getItem('subtracker_token');
         const API_BASE = (import.meta as any).env?.VITE_API_BASE ?? '';
@@ -22,8 +19,6 @@ export function SettingsDialog() {
         if (!res.ok) throw new Error('Erreur API');
         const data = await res.json();
         const value = data.user?.notificationsEnabled ?? false;
-        console.log(data.user)
-        console.log('notificationsEnabled reçu de la BDD :', value);
         setNotificationsEnabled(value);
       } catch (e) {
         console.error('Erreur lors de la récupération de notificationsEnabled', e);
@@ -57,7 +52,6 @@ export function SettingsDialog() {
     // Synchronisation au chargement de la page (montage du composant)
     useEffect(() => {
       fetchNotificationSetting();
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
   if (!user) {
     return null; 

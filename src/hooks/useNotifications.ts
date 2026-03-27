@@ -7,10 +7,9 @@ export function useNotifications() {
   const { user } = useAuth();
   const { subscriptions } = useSubscriptions();
 
-  // const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
-  const SERVICE_ID: string = (import.meta as any).env?.VITE_EMAILJS_SERVICE_ID || 'YOUR_EMAILJS_SERVICE_ID';
-  const TEMPLATE_ID: string = (import.meta as any).env?.VITE_EMAILJS_TEMPLATE_ID || 'YOUR_EMAILJS_TEMPLATE_ID';
-  const PUBLIC_KEY: string = (import.meta as any).env?.VITE_EMAILJS_PUBLIC_KEY || 'YOUR_EMAILJS_PUBLIC_KEY';
+  const SERVICE_ID: string = (import.meta as any).env?.VITE_EMAILJS_SERVICE_ID ;
+  const TEMPLATE_ID: string = (import.meta as any).env?.VITE_EMAILJS_TEMPLATE_ID ;
+  const PUBLIC_KEY: string = (import.meta as any).env?.VITE_EMAILJS_PUBLIC_KEY ;
 
   const sendNotificationEmail = async (sub: Subscription) => {
     if (!user) {
@@ -19,8 +18,6 @@ export function useNotifications() {
     }
 
     try {
-      // Remplace ces valeurs par tes propres identifiants EmailJS
-
       const templateParams = {
         to_name: user.name || user.email,
         to_email: user.email,
@@ -31,7 +28,6 @@ export function useNotifications() {
       };
 
       await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
-      console.log('Notification email envoyée via EmailJS', templateParams);
     } catch (error) {
       console.error('Erreur lors de l\'envoi de l\'email EmailJS:', error);
       throw error;
@@ -51,7 +47,6 @@ export function useNotifications() {
     for (const sub of upcomingSubscriptions) {
       try {
         await sendNotificationEmail(sub);
-        console.log(`Notification sent for ${sub.name}`);
       } catch (error) {
         console.error(`Failed to send notification for ${sub.name}:`, error);
       }
