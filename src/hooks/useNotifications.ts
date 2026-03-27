@@ -7,7 +7,7 @@ export function useNotifications() {
   const { user } = useAuth();
   const { subscriptions } = useSubscriptions();
 
-  const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
+  // const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
   const SERVICE_ID: string = (import.meta as any).env?.VITE_EMAILJS_SERVICE_ID || 'YOUR_EMAILJS_SERVICE_ID';
   const TEMPLATE_ID: string = (import.meta as any).env?.VITE_EMAILJS_TEMPLATE_ID || 'YOUR_EMAILJS_TEMPLATE_ID';
   const PUBLIC_KEY: string = (import.meta as any).env?.VITE_EMAILJS_PUBLIC_KEY || 'YOUR_EMAILJS_PUBLIC_KEY';
