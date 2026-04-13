@@ -1,7 +1,16 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import useAuth from '@/hooks/useAuth';
 import { Login } from '@/components/auth/Login';
 import { ArrowUpDown, Settings, LogOut } from 'lucide-react';
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useMotionValue,
+  useScroll as useViewportScroll,
+  useSpring,
+  useTransform,
+} from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { StatsCard } from '@/components/subscriptions/StatsCard';
 import { SubscriptionBubbles } from '@/components/subscriptions/SubscriptionBubbles';
@@ -37,6 +46,17 @@ function App() {
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [showYearly, setShowYearly] = useState(false);
+
+  const upcomingHeaderRef = useRef<HTMLHeadingElement | null>(null);
+  const subscriptionsHeaderRef = useRef<HTMLHeadingElement | null>(null);
+  const upcomingInView = useInView(upcomingHeaderRef, { once: true, amount: 0.4 });
+  const subscriptionsInView = useInView(subscriptionsHeaderRef, { once: true, amount: 0.4 });
+
+  const { scrollYProgress } = useViewportScroll();
+  const progressScaleX = useSpring(scrollYProgress, { stiffness: 130, damping: 24, mass: 0.35 });
+
+  const pointerX = useMotionValue(0);
+  const toggleRotate = useTransform(pointerX, [-120, 120], [-2, 2]);
 
   if (auth.loading) {
     return <div className="min-h-screen flex items-center justify-center">Chargement...</div>;
@@ -82,6 +102,11 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background">
+      <motion.div
+        className="fixed left-0 top-0 z-50 h-1 w-full origin-left bg-primary/70"
+        style={{ scaleX: progressScaleX }}
+      />
+
       {/* Sidebar for desktop */}
       <aside className="fixed left-0 top-0 hidden h-full w-64 border-r border-border bg-card p-6 lg:block">
         <h1 className="mb-8 text-2xl font-bold text-foreground">SubTracker</h1>
@@ -197,19 +222,37 @@ function App() {
 
           {/* Coming Up Section */}
           <section className="mb-8">
-            <h2 className="text-lg font-semibold text-foreground lg:text-xl">À venir</h2>
+            <motion.h2
+              ref={upcomingHeaderRef}
+              initial={false}
+              animate={upcomingInView ? { y: 0, opacity: 1 } : { y: 0, opacity: 1 }}
+              transition={{ duration: 0.2 }}
+              className="text-lg font-semibold text-foreground lg:text-xl"
+            >
+              À venir
+            </motion.h2>
             <div className="mb-4 flex items-center justify-start">
               <span className="text-sm font-medium text-muted-foreground@ ">Total à venir: €{formatCurrency(upcomingTotal)}</span>
             </div>
             <div className="overflow-x-hidden">
               <div className="flex gap-3 overflow-x-auto pb-2 px-4 lg:px-0 pr-6">
-                {upcomingSubscriptions.map((sub) => (
-                  <UpcomingCard 
-                    key={sub.id} 
-                    subscription={sub} 
-                    onClick={() => handleSubscriptionClick(sub)}
-                  />
-                ))}
+                <AnimatePresence initial={false} mode="popLayout">
+                  {upcomingSubscriptions.map((sub) => (
+                    <motion.div
+                      key={sub.id}
+                      layout
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <UpcomingCard
+                        subscription={sub}
+                        onClick={() => handleSubscriptionClick(sub)}
+                      />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
             </div>
           </section>
@@ -218,14 +261,30 @@ function App() {
           <section>
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-foreground lg:text-xl">Tous les abonnements</h2>
-                <button 
+                <motion.h2
+                  ref={subscriptionsHeaderRef}
+                  initial={false}
+                  animate={subscriptionsInView ? { y: 0, opacity: 1 } : { y: 0, opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-lg font-semibold text-foreground lg:text-xl"
+                >
+                  Tous les abonnements
+                </motion.h2>
+                <motion.button
                   onClick={() => setShowYearly(!showYearly)}
+                  onPointerMove={(event) => {
+                    const bounds = event.currentTarget.getBoundingClientRect();
+                    pointerX.set(event.clientX - (bounds.left + bounds.width / 2));
+                  }}
+                  onPointerLeave={() => pointerX.set(0)}
+                  style={{ rotate: toggleRotate }}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 >
                   {showYearly ? 'Annuel' : 'Mensuel'} · €{formatCurrency(showYearly ? stats.yearlyTotal : stats.monthlyTotal)} {showYearly ? '/ an' : '/ mois'}
                   <span className="ml-1 text-xs text-primary">(cliquer pour changer)</span>
-                </button>
+                </motion.button>
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -250,22 +309,42 @@ function App() {
 
             {/* Desktop: Grid layout, Mobile: List layout */}
             <div className="space-y-3 lg:hidden">
-              {subscriptions.map((sub) => (
-                <SubscriptionListItem 
-                  key={sub.id} 
-                  subscription={sub} 
-                  onClick={() => handleSubscriptionClick(sub)}
-                />
-              ))}
+              <AnimatePresence initial={false} mode="popLayout">
+                {subscriptions.map((sub) => (
+                  <motion.div
+                    key={sub.id}
+                    layout
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.18 }}
+                  >
+                    <SubscriptionListItem
+                      subscription={sub}
+                      onClick={() => handleSubscriptionClick(sub)}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
             <div className="hidden gap-4 lg:grid lg:grid-cols-2 xl:grid-cols-3">
-              {subscriptions.map((sub) => (
-                <SubscriptionListItem 
-                  key={sub.id} 
-                  subscription={sub} 
-                  onClick={() => handleSubscriptionClick(sub)}
-                />
-              ))}
+              <AnimatePresence initial={false} mode="popLayout">
+                {subscriptions.map((sub) => (
+                  <motion.div
+                    key={sub.id}
+                    layout
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.18 }}
+                  >
+                    <SubscriptionListItem
+                      subscription={sub}
+                      onClick={() => handleSubscriptionClick(sub)}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           </section>
 

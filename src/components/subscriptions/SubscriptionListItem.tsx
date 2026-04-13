@@ -1,6 +1,7 @@
 import { Subscription } from '@/types/subscription';
 import { getDaysUntil } from '@/hooks/useSubscriptions';
 import SubscriptionAvatar from './SubscriptionAvatar';
+import { AnimatePresence, motion } from 'framer-motion';
 
 
 // Using Iconify via `Icon` component with simple-icons namespace.
@@ -41,9 +42,13 @@ export function SubscriptionListItem({ subscription, onClick }: SubscriptionList
     : subscription.price;
 
   return (
-    <div 
+    <motion.div
       className="flex items-center gap-3 rounded-2xl bg-card p-3 shadow-sm transition-all duration-300 hover:shadow-md cursor-pointer active:scale-[0.98] lg:flex-col lg:items-start lg:p-6"
       onClick={onClick}
+      layout
+      initial={false}
+      whileHover={{ y: -1 }}
+      whileTap={{ scale: 0.99 }}
     >
       <div className="flex items-center gap-4 lg:w-full w-full">
           <SubscriptionAvatar
@@ -68,15 +73,24 @@ export function SubscriptionListItem({ subscription, onClick }: SubscriptionList
         
           <div className="text-right flex-shrink-0 lg:hidden">
           <p className={`${daysUntilPayment === 0 ? 'text-destructive' : 'text-muted-foreground'} text-sm`}>{daysUntilPayment === 0 ? "Aujourd'hui" : `${daysUntilPayment} ${daysUntilPayment === 1 ? 'jour' : 'jours'}`}</p>
-          {daysUntilPayment === 0 && (
-            <span className="inline-block mt-1 rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-medium text-destructive">
-              Aujourd'hui
-            </span>
-          )}
+          <AnimatePresence initial={false}>
+            {daysUntilPayment === 0 && (
+              <motion.span
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                className="inline-block mt-1 rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-medium text-destructive"
+              >
+                Aujourd'hui
+              </motion.span>
+            )}
+          </AnimatePresence>
           <div className="mt-1 h-1.5 w-14 overflow-hidden rounded-full bg-muted">
-            <div
+            <motion.div
               className={`h-full rounded-full ${daysUntilPayment === 0 ? 'bg-destructive' : 'bg-muted-foreground/40'}`}
-              style={{ width: `${Math.min(100, (Math.max(0, daysUntilPayment) / 30) * 100)}%` }}
+              initial={false}
+              animate={{ width: `${Math.min(100, (Math.max(0, daysUntilPayment) / 30) * 100)}%` }}
+              transition={{ duration: 0.45, ease: 'easeOut' }}
             />
           </div>
         </div>
@@ -99,20 +113,29 @@ export function SubscriptionListItem({ subscription, onClick }: SubscriptionList
           </div>
           <div className="text-right">
             <p className={`${daysUntilPayment === 0 ? 'text-destructive' : 'text-foreground'} text-sm font-medium`}>{daysUntilPayment === 0 ? "Aujourd'hui" : `${daysUntilPayment} ${daysUntilPayment === 1 ? 'jour' : 'jours'}`}</p>
-            {daysUntilPayment === 0 && (
-              <div className="mt-2">
-                <span className="inline-block rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-medium text-destructive">Aujourd'hui</span>
-              </div>
-            )}
+            <AnimatePresence initial={false}>
+              {daysUntilPayment === 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  className="mt-2"
+                >
+                  <span className="inline-block rounded-full bg-destructive/20 px-2 py-0.5 text-xs font-medium text-destructive">Aujourd'hui</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <div className="mt-1 h-1.5 w-16 overflow-hidden rounded-full bg-muted">
-              <div
+              <motion.div
                 className={`h-full rounded-full ${daysUntilPayment === 0 ? 'bg-destructive' : 'bg-primary'}`}
-                style={{ width: `${Math.max(5, Math.min(100, (1 - Math.max(0, daysUntilPayment) / 30) * 100))}%` }}
+                initial={false}
+                animate={{ width: `${Math.max(5, Math.min(100, (1 - Math.max(0, daysUntilPayment) / 30) * 100))}%` }}
+                transition={{ duration: 0.45, ease: 'easeOut' }}
               />
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
