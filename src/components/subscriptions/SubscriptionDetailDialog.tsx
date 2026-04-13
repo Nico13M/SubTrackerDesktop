@@ -15,8 +15,8 @@ interface SubscriptionDetailDialogProps {
   subscription: Subscription | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (id: string, updates: Partial<Omit<Subscription, 'id'>>) => Promise<Subscription | null> | void;
-  onDelete: (id: string) => Promise<void> | void;
+  onUpdate: (id: string, updates: Partial<Omit<Subscription, 'id'>>) => Promise<{ ok: true; data: Subscription } | { ok: false; error: string }> | { ok: true; data: Subscription } | { ok: false; error: string } | void;
+  onDelete: (id: string) => Promise<{ ok: true; data: null } | { ok: false; error: string }> | { ok: true; data: null } | { ok: false; error: string } | void;
   stats: {
     monthlyPrice: number;
     yearlyPrice: number;
@@ -84,10 +84,12 @@ export function SubscriptionDetailDialog({
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   // fileInputRef kept for parity but image upload removed
 
   const startEditing = () => {
     if (subscription) {
+      setError(null);
 
       setName(subscription.name);
       setPrice(subscription.price.toString());
@@ -105,8 +107,9 @@ export function SubscriptionDetailDialog({
     if (!subscription || !name || !price || !category || !nextPaymentDate || isSaving) return;
 
     setIsSaving(true);
+    setError(null);
     try {
-      const res = await onUpdate(subscription.id, {
+      const res = await Promise.resolve(onUpdate(subscription.id, {
         name,
         price: parseFloat(price),
         billingCycle,
@@ -114,7 +117,12 @@ export function SubscriptionDetailDialog({
         color,
         nextPaymentDate: new Date(nextPaymentDate),
         icon: selectedIcon ?? undefined,
-      } as Partial<Omit<Subscription, 'id'>>);
+      } as Partial<Omit<Subscription, 'id'>>));
+
+      if (res && 'ok' in res && !res.ok) {
+        setError(res.error);
+        return;
+      }
 
       // If parent updated selectedSubscription, it will re-render the dialog with new values.
       // Wait for the update to complete before leaving edit mode to ensure UI shows updated data.
@@ -129,7 +137,13 @@ export function SubscriptionDetailDialog({
     if (subscription) {
       if (isDeleting) return;
       setIsDeleting(true);
-      await Promise.resolve(onDelete(subscription.id));
+      setError(null);
+      const result = await Promise.resolve(onDelete(subscription.id));
+      if (result && 'ok' in result && !result.ok) {
+        setError(result.error);
+        setIsDeleting(false);
+        return;
+      }
       setIsDeleting(false);
       onOpenChange(false);
     }
@@ -158,6 +172,11 @@ export function SubscriptionDetailDialog({
 
         {isEditing ? (
           <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-4">
+            {error && (
+              <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </p>
+            )}
             <div className="space-y-2">
               <Label>Ou choisir une icône</Label>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -280,6 +299,11 @@ export function SubscriptionDetailDialog({
           </form>
         ) : (
           <div className="space-y-4">
+            {error && (
+              <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </p>
+            )}
             {/* Stats Cards */}
             {stats && (
               <div className="grid grid-cols-2 gap-3 ">

@@ -1,50 +1,36 @@
 import { useState, useEffect } from 'react';
+import { extractApiErrorMessage, formatApiError } from '@/lib/apiErrors';
 
 type User = { id: string; email: string; name?: string, notificationsEnabled?: boolean } | null;
 
-export function useAuth() {
+type MutationResult<T> =
+  | { ok: true; user?: User; token?: string; data?: T }
+  | { ok: false; error: string };
+
+export type UseAuthReturn = {
+  user: User;
+  loading: boolean;
+  error: string | null;
+  login: (email: string, password: string) => Promise<MutationResult<User>>;
+  signup: (email: string, password: string, name?: string) => Promise<MutationResult<User>>;
+  refresh: (token?: string) => Promise<MutationResult<string>>;
+  logout: () => void;
+  isAuthenticated: boolean;
+  fetchMe: () => Promise<User>;
+  getToken: () => string | null;
+  updateUserSettings: (settings: { notificationsEnabled: boolean }) => Promise<MutationResult<User>>;
+};
+
+export function useAuth(): UseAuthReturn {
   const [user, setUser] = useState<User>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
 
-  const getApiErrorMessage = async (res: Response, fallback: string) => {
-    let raw = '';
-    try {
-      raw = await res.text();
-    } catch {
-      return fallback;
-    }
-
-    if (!raw) return fallback;
-
-    try {
-      const parsed = JSON.parse(raw);
-      if (typeof parsed?.error === 'string' && parsed.error.trim()) {
-        return parsed.error;
-      }
-      if (typeof parsed?.message === 'string' && parsed.message.trim()) {
-        return parsed.message;
-      }
-    } catch {
-      // Not JSON; continue with raw text.
-    }
-
-    return raw;
-  };
-
-  const mapLoginErrorMessage = (message: string, status?: number) => {
-    const normalized = message.toLowerCase();
-    if (status === 401 || normalized.includes('invalid credentials')) {
-      return 'Email ou mot de passe incorrect.';
-    }
-    return message || 'Une erreur est survenue pendant la connexion.';
-  };
-
   const getToken = () => sessionStorage.getItem('subtracker_token');
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<MutationResult<User>> => {
     setError(null);
     try {
       const res = await fetch(`${API_BASE}/api/auth/login`, {
@@ -53,8 +39,8 @@ export function useAuth() {
         body: JSON.stringify({ email, password }),
       });
       if (!res.ok) {
-        const message = await getApiErrorMessage(res, `HTTP ${res.status}`);
-        throw new Error(mapLoginErrorMessage(message, res.status));
+        const message = await extractApiErrorMessage(res, `HTTP ${res.status}`);
+        throw new Error(formatApiError(message, res.status, 'Une erreur est survenue pendant la connexion.'));
       }
       const data = await res.json();
       const token = data?.token;
@@ -66,15 +52,13 @@ export function useAuth() {
       return { ok: true, user };
     } catch (err: any) {
       const rawMessage = err?.message ?? '';
-      const message = rawMessage.toLowerCase().includes('failed to fetch')
-        ? 'Impossible de contacter le serveur. Vérifiez votre connexion.'
-        : (rawMessage || 'Une erreur est survenue pendant la connexion.');
+      const message = formatApiError(rawMessage, undefined, 'Une erreur est survenue pendant la connexion.');
       setError(message);
       return { ok: false, error: message };
     }
   };
 
-  const signup = async (email: string, password: string, name?: string) => {
+  const signup = async (email: string, password: string, name?: string): Promise<MutationResult<User>> => {
     setError(null);
     try {
       const res = await fetch(`${API_BASE}/api/auth/signup`, {
@@ -83,8 +67,8 @@ export function useAuth() {
         body: JSON.stringify({ email, password, name }),
       });
       if (!res.ok) {
-        const message = await getApiErrorMessage(res, `HTTP ${res.status}`);
-        throw new Error(message || 'Une erreur est survenue pendant l\'inscription.');
+        const message = await extractApiErrorMessage(res, `HTTP ${res.status}`);
+        throw new Error(formatApiError(message, res.status, 'Une erreur est survenue pendant l\'inscription.'));
       }
       const data = await res.json();
       const token = data?.token;
@@ -96,9 +80,7 @@ export function useAuth() {
       return { ok: true, user };
     } catch (err: any) {
       const rawMessage = err?.message ?? '';
-      const message = rawMessage.toLowerCase().includes('failed to fetch')
-        ? 'Impossible de contacter le serveur. Vérifiez votre connexion.'
-        : (rawMessage || 'Une erreur est survenue pendant l\'inscription.');
+      const message = formatApiError(rawMessage, undefined, 'Une erreur est survenue pendant l\'inscription.');
       setError(message);
       return { ok: false, error: message };
     }
@@ -109,7 +91,7 @@ export function useAuth() {
     setUser(null);
   };
 
-  const refresh = async (token?: string) => {
+  const refresh = async (token?: string): Promise<MutationResult<string>> => {
     const current = token ?? getToken();
     if (!current) return { ok: false, error: 'No token' };
     try {
@@ -119,8 +101,8 @@ export function useAuth() {
         body: JSON.stringify({ token: current }),
       });
       if (!res.ok) {
-        const message = await getApiErrorMessage(res, `HTTP ${res.status}`);
-        throw new Error(message);
+        const message = await extractApiErrorMessage(res, `HTTP ${res.status}`);
+        throw new Error(formatApiError(message, res.status, 'Une erreur est survenue.'));
       }
       const data = await res.json();
       const newToken = data?.token;
@@ -132,11 +114,11 @@ export function useAuth() {
       // If refresh fails, clear token
       sessionStorage.removeItem('subtracker_token');
       setUser(null);
-      return { ok: false, error: err.message };
+      return { ok: false, error: formatApiError(err?.message ?? '', undefined, 'Une erreur est survenue.').trim() };
     }
   };
 
-  const fetchMe = async () => {
+  const fetchMe = async (): Promise<User> => {
     const token = getToken();
     if (!token) {
       setLoading(false);
@@ -176,7 +158,7 @@ export function useAuth() {
     }
   };
 
-  const updateUserSettings = async (settings: { notificationsEnabled: boolean }) => {
+  const updateUserSettings = async (settings: { notificationsEnabled: boolean }): Promise<MutationResult<User>> => {
     const token = getToken();
     if (!token) return { ok: false, error: 'No token' };
 
@@ -191,8 +173,8 @@ export function useAuth() {
       });
 
       if (!res.ok) {
-        const message = await getApiErrorMessage(res, `HTTP ${res.status}`);
-        throw new Error(message);
+        const message = await extractApiErrorMessage(res, `HTTP ${res.status}`);
+        throw new Error(formatApiError(message, res.status, 'Une erreur est survenue.'));
       }
 
       const data = await res.json();
@@ -203,7 +185,7 @@ export function useAuth() {
       return { ok: true, user: data.user };
     } catch (err: any) {
       console.error('Failed to update user settings:', err.message);
-      return { ok: false, error: err.message };
+      return { ok: false, error: formatApiError(err?.message ?? '', undefined, 'Une erreur est survenue.') };
     }
   };
 

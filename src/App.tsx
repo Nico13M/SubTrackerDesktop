@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import useAuth from '@/hooks/useAuth';
+import useAuth, { type UseAuthReturn } from '@/hooks/useAuth';
 import { Login } from '@/components/auth/Login';
 import { ArrowUpDown, Settings, LogOut } from 'lucide-react';
 import {
@@ -30,7 +30,7 @@ import {
 import { SortOption, Subscription } from '@/types/subscription';
 
 function App() {
-  const auth = useAuth();
+  const auth: UseAuthReturn = useAuth();
   const {
     subscriptions,
     upcomingSubscriptions,
@@ -41,6 +41,7 @@ function App() {
     updateSubscription,
     removeSubscription,
     getSubscriptionStats,
+    error: subscriptionsError,
   } = useSubscriptions();
   // App-level state hooks must be declared unconditionally to preserve hooks order
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
@@ -74,7 +75,7 @@ function App() {
   // Wrap updateSubscription so we can update the selectedSubscription immediately
   const handleUpdate = async (id: string, updates: Partial<Omit<Subscription, 'id'>>) => {
     const updated = await updateSubscription(id, updates as any);
-    if (updated) setSelectedSubscription(updated);
+    if (updated.ok) setSelectedSubscription(updated.data);
     return updated;
   };
 
@@ -219,6 +220,18 @@ function App() {
               </div>
             </div>
           </div>
+
+          {subscriptions.length === 0 && !subscriptionsError && (
+            <div className="mb-6 rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+              Aucun abonnement pour le moment.
+            </div>
+          )}
+
+          {subscriptionsError && (
+            <div className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {subscriptionsError}
+            </div>
+          )}
 
           {/* Coming Up Section */}
           <section className="mb-8">

@@ -31,6 +31,7 @@ export function SettingsDialog() {
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(user?.notificationsEnabled ?? false);
   const [isSavingNotifications, setIsSavingNotifications] = useState(false);
+  const [notificationsError, setNotificationsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -42,9 +43,14 @@ export function SettingsDialog() {
     if (isSavingNotifications) return;
     const newState = !notificationsEnabled;
     setNotificationsEnabled(newState);
+    setNotificationsError(null);
     setIsSavingNotifications(true);
     try {
-      await updateUserSettings({ notificationsEnabled: newState });
+      const result = await updateUserSettings({ notificationsEnabled: newState });
+      if (!result.ok) {
+        setNotificationsEnabled(!newState);
+        setNotificationsError(result.error);
+      }
     } finally {
       setIsSavingNotifications(false);
     }
@@ -102,6 +108,11 @@ export function SettingsDialog() {
           <div className="rounded-xl bg-muted/50 p-4">
             <h3 className="font-semibold mb-3">Préférences</h3>
             <div className="space-y-3">
+              {notificationsError && (
+                <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                  {notificationsError}
+                </p>
+              )}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Bell className="h-4 w-4 text-muted-foreground" />

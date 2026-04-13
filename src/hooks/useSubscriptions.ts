@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Subscription, SortOption } from '@/types/subscription';
+import { extractApiErrorMessage, formatApiError } from '@/lib/apiErrors';
 
 // Helper function to calculate months difference
 function differenceInMonths(dateLeft: Date, dateRight: Date): number {
@@ -50,6 +51,10 @@ export function useSubscriptions() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  type MutationResult<T> =
+    | { ok: true; data: T }
+    | { ok: false; error: string };
 
   const parseSubscription = (raw: any): Subscription => {
     const nextRaw = raw.nextPaymentDate ?? raw.next_payment_date ?? raw.next_payment ?? null;
@@ -112,7 +117,10 @@ export function useSubscriptions() {
       const res = await fetch(`${API_BASE}/api/subscriptions`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const message = await extractApiErrorMessage(res, `HTTP ${res.status}`);
+        throw new Error(formatApiError(message, res.status, 'Impossible de charger les abonnements.'));
+      }
       const data = await res.json();
       let items: any[] = [];
       if (Array.isArray(data)) items = data;
@@ -123,7 +131,7 @@ export function useSubscriptions() {
 
       setSubscriptions((items || []).map(parseSubscription));
     } catch (err: any) {
-      setError(err.message || 'Erreur de récupération');
+      setError(formatApiError(err?.message ?? '', undefined, 'Impossible de charger les abonnements.'));
     } finally {
       setLoading(false);
     }
@@ -134,7 +142,7 @@ export function useSubscriptions() {
   }, [fetchSubscriptions]);
   const [sortBy, setSortBy] = useState<SortOption>('price');
 
-  const addSubscription = async (newSub: Omit<Subscription, 'id'>) => {
+  const addSubscription = async (newSub: Omit<Subscription, 'id'>): Promise<MutationResult<Subscription>> => {
     try {
       const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
 
@@ -160,6 +168,10 @@ export function useSubscriptions() {
         headers,
         body: JSON.stringify(payload),
       });
+      if (!res.ok) {
+        const message = await extractApiErrorMessage(res, `HTTP ${res.status}`);
+        return { ok: false, error: formatApiError(message, res.status, 'Impossible d’ajouter l’abonnement.') };
+      }
       const created = await res.json();
      // Normalize various possible response shapes
       let newItem: any = created;
@@ -169,14 +181,18 @@ export function useSubscriptions() {
       else if (created.data && Array.isArray(created.data)) newItem = created.data[0];
       else if (created.subscriptions && Array.isArray(created.subscriptions)) newItem = created.subscriptions[0];
 
-      setSubscriptions((prev) => [...prev, parseSubscription(newItem)]);
+      const parsed = parseSubscription(newItem);
+      setSubscriptions((prev) => [...prev, parsed]);
+      return { ok: true, data: parsed };
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Failed to add subscription', err);
+      const message = formatApiError(err instanceof Error ? err.message : String(err), undefined, 'Impossible d’ajouter l’abonnement.');
+      return { ok: false, error: message };
     }
   };
 
-  const updateSubscription = async (id: string, updates: Partial<Omit<Subscription, 'id'>>): Promise<Subscription | null> => {
+  const updateSubscription = async (id: string, updates: Partial<Omit<Subscription, 'id'>>): Promise<MutationResult<Subscription>> => {
     try {
       const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
 
@@ -201,7 +217,10 @@ export function useSubscriptions() {
         headers,
         body: JSON.stringify(payload),
       });
-     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+     if (!res.ok) {
+      const message = await extractApiErrorMessage(res, `HTTP ${res.status}`);
+      return { ok: false, error: formatApiError(message, res.status, 'Impossible de modifier l’abonnement.') };
+     }
       const updated = await res.json();
       // Debug: log raw PUT response
       // eslint-disable-next-line no-console
@@ -259,25 +278,36 @@ export function useSubscriptions() {
         return newSubs;
       });
 
-      return returnedParsed;
+      if (!returnedParsed) {
+        return { ok: false, error: 'Impossible de mettre à jour l’abonnement.' };
+      }
+
+      return { ok: true, data: returnedParsed };
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Failed to update subscription', err);
-      return null;
+      const message = formatApiError(err instanceof Error ? err.message : String(err), undefined, 'Impossible de modifier l’abonnement.');
+      return { ok: false, error: message };
     }
   };
 
-  const removeSubscription = async (id: string) => {
+  const removeSubscription = async (id: string): Promise<MutationResult<null>> => {
     try {
       const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
 
       const token = sessionStorage.getItem('subtracker_token');
       const res = await fetch(`${API_BASE}/api/subscriptions/${id}`, { method: 'DELETE', headers: token ? { Authorization: `Bearer ${token}` } : undefined });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        const message = await extractApiErrorMessage(res, `HTTP ${res.status}`);
+        return { ok: false, error: formatApiError(message, res.status, 'Impossible de supprimer l’abonnement.') };
+      }
       setSubscriptions((prev) => prev.filter((sub) => sub.id !== id));
+      return { ok: true, data: null };
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Failed to delete subscription', err);
+      const message = formatApiError(err instanceof Error ? err.message : String(err), undefined, 'Impossible de supprimer l’abonnement.');
+      return { ok: false, error: message };
     }
   };
 

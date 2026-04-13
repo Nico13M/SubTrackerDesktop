@@ -10,7 +10,7 @@ import SubscriptionAvatar from './SubscriptionAvatar';
 import { Subscription } from '@/types/subscription';
 
 interface AddSubscriptionDialogProps {
-  onAdd: (subscription: Omit<Subscription, 'id'>) => Promise<void> | void;
+  onAdd: (subscription: Omit<Subscription, 'id'>) => Promise<{ ok: true } | { ok: false; error: string }> | { ok: true } | { ok: false; error: string } | void;
 }
 
 const categories = [
@@ -51,6 +51,7 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
   
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const brands = [
     { id: 'spotify', label: 'Spotify', color: '#1DB954', icon: 'simple-icons:spotify' },
@@ -70,12 +71,16 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
+    setError(null);
     
-    if (!name || !price || !category || !nextPaymentDate) return;
+    if (!name || !price || !category || !nextPaymentDate) {
+      setError('Merci de remplir tous les champs obligatoires.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      await Promise.resolve(onAdd({
+      const result = await Promise.resolve(onAdd({
         name,
         price: parseFloat(price),
         currency: '€',
@@ -86,6 +91,11 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
         startDate: new Date(),
         icon: selectedIcon ?? undefined,
       }));
+
+      if (result && 'ok' in result && !result.ok) {
+        setError(result.error);
+        return;
+      }
 
       // Reset form
       setName('');
@@ -115,6 +125,11 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
           <DialogTitle>Nouvel abonnement</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </p>
+          )}
           {/* Image Upload */}
           <div className="space-y-2">
             <Label>Logo</Label>
