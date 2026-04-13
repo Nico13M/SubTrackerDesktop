@@ -19,7 +19,8 @@ export function UpcomingCard({ subscription, onClick }: UpcomingCardProps) {
   now.setHours(0,0,0,0);
   const originalDay = nextPaymentDate.getDate();
   let safety = 0;
-  while (nextPaymentDate <= now && safety < 24) {
+  // On ne saute au mois suivant que si la date est strictement avant aujourd'hui
+  while (nextPaymentDate < now && safety < 24) {
     const currentMonth = nextPaymentDate.getMonth();
     nextPaymentDate.setMonth(currentMonth + 1);
     if (nextPaymentDate.getDate() < originalDay) {

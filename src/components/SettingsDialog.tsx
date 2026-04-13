@@ -1,16 +1,62 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Settings, Bell, Clock, Info } from 'lucide-react';
+import { Settings, Bell, Info } from 'lucide-react';
 import { useSubscriptions } from '@/hooks/useSubscriptions';
 import useAuth from '@/hooks/useAuth';
+import { useNotifications } from '@/hooks/useNotifications';
 
 export function SettingsDialog() {
+    // Fonction pour récupérer la valeur notificationsEnabled depuis l'API
+    const fetchNotificationSetting = async () => {
+      try {
+        const token = sessionStorage.getItem('subtracker_token');
+        const API_BASE = (import.meta as any).env?.VITE_API_BASE ?? '';
+        const res = await fetch(`${API_BASE}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error('Erreur API');
+        const data = await res.json();
+        const value = data.user?.notificationsEnabled ?? false;
+        setNotificationsEnabled(value);
+      } catch (e) {
+        console.error('Erreur lors de la récupération de notificationsEnabled', e);
+      }
+    };
   const [open, setOpen] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [reminderEnabled, setReminderEnabled] = useState(true);
   const { stats } = useSubscriptions();
-  const { logout } = useAuth();
+  const { user, logout, updateUserSettings } = useAuth();
+  const { checkAndSendNotifications } = useNotifications();
+
+  const [notificationsEnabled, setNotificationsEnabled] = useState(user?.notificationsEnabled ?? false);
+
+  useEffect(() => {
+    if (user) {
+      setNotificationsEnabled(user.notificationsEnabled ?? false);
+    }
+  }, [user]);
+
+  const handleNotificationToggle = async () => {
+    const newState = !notificationsEnabled;
+    setNotificationsEnabled(newState);
+    await updateUserSettings({ notificationsEnabled: newState });
+  };
+
+  useEffect(() => {
+    if (notificationsEnabled) {
+      checkAndSendNotifications();
+    }
+  }, [notificationsEnabled, checkAndSendNotifications]);
+  
+    // Synchronisation au chargement de la page (montage du composant)
+    useEffect(() => {
+      fetchNotificationSetting();
+    }, []);
+  if (!user) {
+    return null; 
+  }
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -52,10 +98,10 @@ export function SettingsDialog() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Bell className="h-4 w-4 text-muted-foreground" />
-                  <span>Notifications</span>
+                  <span>Activer les notifications par email</span>
                 </div>
                 <button
-                  onClick={() => setNotificationsEnabled(!notificationsEnabled)}
+                  onClick={handleNotificationToggle}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     notificationsEnabled ? 'bg-primary' : 'bg-muted'
                   }`}
@@ -63,24 +109,6 @@ export function SettingsDialog() {
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
                       notificationsEnabled ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span>Rappel avant paiement</span>
-                </div>
-                <button
-                  onClick={() => setReminderEnabled(!reminderEnabled)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    reminderEnabled ? 'bg-primary' : 'bg-muted'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      reminderEnabled ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
                 </button>
