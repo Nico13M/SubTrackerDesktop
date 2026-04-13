@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Settings, Bell, Info } from 'lucide-react';
+import { Settings, Bell, Info, Loader2 } from 'lucide-react';
 import { useSubscriptions } from '@/hooks/useSubscriptions';
 import useAuth from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -30,6 +30,7 @@ export function SettingsDialog() {
   const { checkAndSendNotifications } = useNotifications();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(user?.notificationsEnabled ?? false);
+  const [isSavingNotifications, setIsSavingNotifications] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -38,9 +39,15 @@ export function SettingsDialog() {
   }, [user]);
 
   const handleNotificationToggle = async () => {
+    if (isSavingNotifications) return;
     const newState = !notificationsEnabled;
     setNotificationsEnabled(newState);
-    await updateUserSettings({ notificationsEnabled: newState });
+    setIsSavingNotifications(true);
+    try {
+      await updateUserSettings({ notificationsEnabled: newState });
+    } finally {
+      setIsSavingNotifications(false);
+    }
   };
 
   useEffect(() => {
@@ -102,15 +109,24 @@ export function SettingsDialog() {
                 </div>
                 <button
                   onClick={handleNotificationToggle}
+                  aria-label="Activer ou désactiver les notifications"
+                  title="Activer ou désactiver les notifications"
+                  disabled={isSavingNotifications}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     notificationsEnabled ? 'bg-primary' : 'bg-muted'
                   }`}
                 >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      notificationsEnabled ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
+                  {isSavingNotifications ? (
+                    <span className="inline-flex w-full items-center justify-center text-white">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    </span>
+                  ) : (
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        notificationsEnabled ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  )}
                 </button>
               </div>
             </div>

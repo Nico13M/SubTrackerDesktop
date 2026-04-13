@@ -1,7 +1,7 @@
 import { Subscription } from '@/types/subscription';
 import SubscriptionAvatar from './SubscriptionAvatar';
 import { useState } from 'react';
-import { AnimatePresence, motion, useMotionValue, useTransform } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface SubscriptionBubblesProps {
   subscriptions: Subscription[];
@@ -11,8 +11,6 @@ export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps)
   const displaySubs = subscriptions.slice(0, 6);
   const remaining = subscriptions.length - displaySubs.length;
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const pointerX = useMotionValue(0);
-  const tooltipShift = useTransform(pointerX, [-120, 120], [-8, 8]);
 
   // Calcul de la taille basée sur le prix
   const getBubbleSize = (price: number, billingCycle: string) => {
@@ -56,14 +54,7 @@ export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps)
             whileHover={{ y: -1 }}
             whileTap={{ scale: 0.98 }}
             onMouseEnter={() => setHoveredId(sub.id)}
-            onMouseLeave={() => {
-              setHoveredId((current) => (current === sub.id ? null : current));
-              pointerX.set(0);
-            }}
-            onMouseMove={(event) => {
-              const bounds = event.currentTarget.getBoundingClientRect();
-              pointerX.set(event.clientX - (bounds.left + bounds.width / 2));
-            }}
+            onMouseLeave={() => setHoveredId((current) => (current === sub.id ? null : current))}
           >
             <SubscriptionAvatar
               name={sub.name}
@@ -76,14 +67,13 @@ export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps)
             {/* Popup au hover */}
             <AnimatePresence initial={false}>
               {hoveredId === sub.id && (
-                <motion.div
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 6 }}
-                  className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 pointer-events-none"
-                  style={{ x: tooltipShift }}
-                >
-                  <div className="bg-popover text-popover-foreground rounded-xl shadow-xl border border-border p-3 min-w-[160px]">
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 pointer-events-none">
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 6 }}
+                    className="bg-popover text-popover-foreground rounded-xl shadow-xl border border-border p-3 min-w-[160px]"
+                  >
                     {/* Flèche */}
                     <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-popover"></div>
                     
@@ -122,8 +112,8 @@ export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps)
                         <span className="font-medium">{sub.billingCycle === 'monthly' ? 'Mensuelle' : 'Annuelle'}</span>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
+                </div>
               )}
             </AnimatePresence>
           </motion.div>
