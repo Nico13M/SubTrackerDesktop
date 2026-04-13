@@ -9,6 +9,39 @@ export function useAuth() {
 
   const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
 
+  const getApiErrorMessage = async (res: Response, fallback: string) => {
+    let raw = '';
+    try {
+      raw = await res.text();
+    } catch {
+      return fallback;
+    }
+
+    if (!raw) return fallback;
+
+    try {
+      const parsed = JSON.parse(raw);
+      if (typeof parsed?.error === 'string' && parsed.error.trim()) {
+        return parsed.error;
+      }
+      if (typeof parsed?.message === 'string' && parsed.message.trim()) {
+        return parsed.message;
+      }
+    } catch {
+      // Not JSON; continue with raw text.
+    }
+
+    return raw;
+  };
+
+  const mapLoginErrorMessage = (message: string, status?: number) => {
+    const normalized = message.toLowerCase();
+    if (status === 401 || normalized.includes('invalid credentials')) {
+      return 'Email ou mot de passe incorrect.';
+    }
+    return message || 'Une erreur est survenue pendant la connexion.';
+  };
+
   const getToken = () => sessionStorage.getItem('subtracker_token');
 
   const login = async (email: string, password: string) => {
@@ -20,8 +53,8 @@ export function useAuth() {
         body: JSON.stringify({ email, password }),
       });
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `HTTP ${res.status}`);
+        const message = await getApiErrorMessage(res, `HTTP ${res.status}`);
+        throw new Error(mapLoginErrorMessage(message, res.status));
       }
       const data = await res.json();
       const token = data?.token;
@@ -32,8 +65,12 @@ export function useAuth() {
       setUser(user);
       return { ok: true, user };
     } catch (err: any) {
-      setError(err.message ?? 'Login failed');
-      return { ok: false, error: err.message };
+      const rawMessage = err?.message ?? '';
+      const message = rawMessage.toLowerCase().includes('failed to fetch')
+        ? 'Impossible de contacter le serveur. Vérifiez votre connexion.'
+        : (rawMessage || 'Une erreur est survenue pendant la connexion.');
+      setError(message);
+      return { ok: false, error: message };
     }
   };
 
@@ -46,8 +83,8 @@ export function useAuth() {
         body: JSON.stringify({ email, password, name }),
       });
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `HTTP ${res.status}`);
+        const message = await getApiErrorMessage(res, `HTTP ${res.status}`);
+        throw new Error(message || 'Une erreur est survenue pendant l\'inscription.');
       }
       const data = await res.json();
       const token = data?.token;
@@ -58,8 +95,12 @@ export function useAuth() {
       setUser(user);
       return { ok: true, user };
     } catch (err: any) {
-      setError(err.message ?? 'Signup failed');
-      return { ok: false, error: err.message };
+      const rawMessage = err?.message ?? '';
+      const message = rawMessage.toLowerCase().includes('failed to fetch')
+        ? 'Impossible de contacter le serveur. Vérifiez votre connexion.'
+        : (rawMessage || 'Une erreur est survenue pendant l\'inscription.');
+      setError(message);
+      return { ok: false, error: message };
     }
   };
 
@@ -78,8 +119,8 @@ export function useAuth() {
         body: JSON.stringify({ token: current }),
       });
       if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `HTTP ${res.status}`);
+        const message = await getApiErrorMessage(res, `HTTP ${res.status}`);
+        throw new Error(message);
       }
       const data = await res.json();
       const newToken = data?.token;
@@ -150,8 +191,8 @@ export function useAuth() {
       });
 
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `HTTP ${res.status}`);
+        const message = await getApiErrorMessage(res, `HTTP ${res.status}`);
+        throw new Error(message);
       }
 
       const data = await res.json();
