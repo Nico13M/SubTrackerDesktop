@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Subscription } from '@/types/subscription';
-import { Trash2, Calendar, TrendingUp, DollarSign } from 'lucide-react';
+import { Trash2, Calendar, TrendingUp, DollarSign, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Icon } from '@iconify/react';
@@ -16,7 +16,7 @@ interface SubscriptionDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdate: (id: string, updates: Partial<Omit<Subscription, 'id'>>) => Promise<Subscription | null> | void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<void> | void;
   stats: {
     monthlyPrice: number;
     yearlyPrice: number;
@@ -82,6 +82,8 @@ export function SubscriptionDetailDialog({
   const [color, setColor] = useState(colors[0]);
   const [nextPaymentDate, setNextPaymentDate] = useState('');
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   // fileInputRef kept for parity but image upload removed
 
   const startEditing = () => {
@@ -100,27 +102,35 @@ export function SubscriptionDetailDialog({
   };
 
   const handleSave = async () => {
-    if (!subscription || !name || !price || !category || !nextPaymentDate) return;
+    if (!subscription || !name || !price || !category || !nextPaymentDate || isSaving) return;
 
-    const res = await onUpdate(subscription.id, {
-      name,
-      price: parseFloat(price),
-      billingCycle,
-      category,
-      color,
-      nextPaymentDate: new Date(nextPaymentDate),
-      icon: selectedIcon ?? undefined,
-    } as Partial<Omit<Subscription, 'id'>>);
+    setIsSaving(true);
+    try {
+      const res = await onUpdate(subscription.id, {
+        name,
+        price: parseFloat(price),
+        billingCycle,
+        category,
+        color,
+        nextPaymentDate: new Date(nextPaymentDate),
+        icon: selectedIcon ?? undefined,
+      } as Partial<Omit<Subscription, 'id'>>);
 
-    // If parent updated selectedSubscription, it will re-render the dialog with new values.
-    // Wait for the update to complete before leaving edit mode to ensure UI shows updated data.
-    setIsEditing(false);
-    return res;
+      // If parent updated selectedSubscription, it will re-render the dialog with new values.
+      // Wait for the update to complete before leaving edit mode to ensure UI shows updated data.
+      setIsEditing(false);
+      return res;
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (subscription) {
-      onDelete(subscription.id);
+      if (isDeleting) return;
+      setIsDeleting(true);
+      await Promise.resolve(onDelete(subscription.id));
+      setIsDeleting(false);
       onOpenChange(false);
     }
   };
@@ -259,10 +269,11 @@ export function SubscriptionDetailDialog({
             </div>
 
             <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={() => setIsEditing(false)} className="flex-1">
+              <Button type="button" variant="outline" onClick={() => setIsEditing(false)} className="flex-1" disabled={isSaving}>
                 Annuler
               </Button>
-              <Button type="submit" className="flex-1">
+              <Button type="submit" className="flex-1" disabled={isSaving}>
+                {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
                 Sauvegarder
               </Button>
             </div>
@@ -352,8 +363,8 @@ export function SubscriptionDetailDialog({
               <Button onClick={startEditing} className="flex-1">
                 Modifier
               </Button>
-              <Button variant="destructive" size="icon" onClick={handleDelete}>
-                <Trash2 className="h-4 w-4" />
+              <Button variant="destructive" size="icon" onClick={handleDelete} disabled={isDeleting}>
+                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
               </Button>
             </div>
           </div>

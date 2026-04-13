@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 
 import SubscriptionAvatar from './SubscriptionAvatar';
 import { Subscription } from '@/types/subscription';
 
 interface AddSubscriptionDialogProps {
-  onAdd: (subscription: Omit<Subscription, 'id'>) => void;
+  onAdd: (subscription: Omit<Subscription, 'id'>) => Promise<void> | void;
 }
 
 const categories = [
@@ -50,6 +50,7 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
   const [nextPaymentDate, setNextPaymentDate] = useState('');
   
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const brands = [
     { id: 'spotify', label: 'Spotify', color: '#1DB954', icon: 'simple-icons:spotify' },
@@ -66,33 +67,39 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
 
   // image upload removed from UI
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     
     if (!name || !price || !category || !nextPaymentDate) return;
 
-    onAdd({
-      name,
-      price: parseFloat(price),
-      currency: '€',
-      billingCycle,
-      category,
-      color,
-      nextPaymentDate: new Date(nextPaymentDate),
-      startDate: new Date(),
-      icon: selectedIcon ?? undefined,
-    });
+    setIsSubmitting(true);
+    try {
+      await Promise.resolve(onAdd({
+        name,
+        price: parseFloat(price),
+        currency: '€',
+        billingCycle,
+        category,
+        color,
+        nextPaymentDate: new Date(nextPaymentDate),
+        startDate: new Date(),
+        icon: selectedIcon ?? undefined,
+      }));
 
-    // Reset form
-    setName('');
-    setPrice('');
-    setBillingCycle('monthly');
-    setCategory('');
-    setColor(colors[0]);
-    setNextPaymentDate('');
-    // imageUrl removed
-    setSelectedIcon(null);
-    setOpen(false);
+      // Reset form
+      setName('');
+      setPrice('');
+      setBillingCycle('monthly');
+      setCategory('');
+      setColor(colors[0]);
+      setNextPaymentDate('');
+      // imageUrl removed
+      setSelectedIcon(null);
+      setOpen(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -237,7 +244,8 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
             </div>
           </div>
 
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             Ajouter l'abonnement
           </Button>
         </form>
