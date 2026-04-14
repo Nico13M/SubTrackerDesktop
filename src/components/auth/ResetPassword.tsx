@@ -8,6 +8,7 @@ import { Loader2 } from 'lucide-react';
 const ResetPassword: React.FC = () => {
   const navigate = useNavigate();
   const token = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('token') : null;
+  const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -41,7 +42,7 @@ const ResetPassword: React.FC = () => {
     setStatus('pending');
     setMessage('');
     try {
-      const res = await fetch('/api/auth/reset-password', {
+      const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, newPassword: password }),

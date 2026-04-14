@@ -9,13 +9,14 @@ const ForgotPassword: React.FC = () => {
   const [status, setStatus] = useState<'idle' | 'pending' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
+  const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('pending');
     setMessage('');
     try {
-      const res = await fetch('/api/auth/forgot-password', {
+      const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
