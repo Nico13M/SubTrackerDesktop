@@ -77,6 +77,11 @@ function Login() {
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {isSubmitting || loading ? (isSignup ? 'Inscription...' : 'Connexion...') : (isSignup ? "S'inscrire" : 'Se connecter')}
           </Button>
+          {isSignup && (
+            <p className="text-xs text-muted-foreground">
+              En vous inscrivant, vous acceptez le traitement de vos donnees personnelles conforme au RGPD pour la creation et la gestion de votre compte.
+            </p>
+          )}
         </form>
         <div className="mt-4 text-center">
           <button

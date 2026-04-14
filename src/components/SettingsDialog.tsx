@@ -140,6 +140,9 @@ export function SettingsDialog() {
                   )}
                 </button>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Conformement au RGPD, vous pouvez activer ou desactiver ces notifications a tout moment depuis vos parametres.
+              </p>
             </div>
           </div>
 
