@@ -110,7 +110,8 @@ export function useSubscriptions() {
   const fetchSubscriptions = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
+    const API_BASE: string = import.meta.env.PROD ? (import.meta as any).env?.VITE_API_BASE ?? '' : 'http://localhost:3000';
+
 
     try {
       const token = sessionStorage.getItem('subtracker_token');

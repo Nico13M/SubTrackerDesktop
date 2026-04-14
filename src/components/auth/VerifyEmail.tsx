@@ -6,6 +6,7 @@ const VerifyEmail: React.FC = () => {
   const [status, setStatus] = useState<'pending' | 'success' | 'error'>("pending");
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
+  const API_BASE: string = import.meta.env.PROD ? (import.meta as any).env?.VITE_API_BASE ?? '' : 'http://localhost:3000';
 
   useEffect(() => {
     const token = searchParams.get('token');
@@ -14,7 +15,7 @@ const VerifyEmail: React.FC = () => {
       setMessage('Token manquant.');
       return;
     }
-    fetch(`/api/auth/verify-email?token=${token}`)
+    fetch(`${API_BASE}/api/auth/verify-email?token=${token}`)
       .then(async (res) => {
         const data = await res.json();
         if (res.ok && data.success) {

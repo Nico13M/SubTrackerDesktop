@@ -12,6 +12,7 @@ import useAuth from "@/hooks/useAuth.ts";
 
 interface AddSubscriptionDialogProps {
   onAdd: (subscription: Omit<Subscription, 'id'>) => Promise<{ ok: true } | { ok: false; error: string }> | { ok: true } | { ok: false; error: string } | void;
+  subscriptionCount?: number;
 }
 
 const categories = [
@@ -41,7 +42,7 @@ const colors = [
 
 ];
 
-export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
+export function AddSubscriptionDialog({ onAdd, subscriptionCount = 0 }: AddSubscriptionDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
@@ -53,9 +54,11 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPremiumPopup, setShowPremiumPopup] = useState(false);
-  const API_BASE = import.meta.env.VITE_API_BASE;
+  const API_BASE: string = import.meta.env.PROD ? (import.meta as any).env?.VITE_API_BASE ?? '' : 'http://localhost:3000';
   const { getToken } = useAuth();
   const token = getToken();
+
+  const hasReachedLimit = subscriptionCount >= 5;
 
   const brands = [
     { id: 'spotify', label: 'Spotify', color: '#1DB954', icon: 'simple-icons:spotify' },
@@ -139,10 +142,48 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Nouvel abonnement</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {hasReachedLimit ? (
+          // Show premium popup instead of form
+          <div className="text-center py-4">
+            <h2 className="text-xl font-bold mb-2">
+              Limite gratuite atteinte 🚫
+            </h2>
+
+            <p className="text-gray-600 mb-4">
+              Vous avez atteint la limite de 5 abonnements.
+              Passez au Premium pour continuer.
+            </p>
+
+            <button
+              className="bg-black text-white px-4 py-2 rounded-lg w-full mb-3"
+              onClick={async () => {
+                const res = await fetch(`${API_BASE}/api/stripe/create-checkout-session`, {
+                  method: 'POST',
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                });
+
+                const data = await res.json();
+                window.location.href = data.url;
+              }}
+            >
+              Passer Premium
+            </button>
+
+            <button
+              className="text-sm text-gray-500 underline w-full"
+              onClick={() => setOpen(false)}
+            >
+              Fermer
+            </button>
+          </div>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle>Nouvel abonnement</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {error}
@@ -297,7 +338,9 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             Ajouter l'abonnement
           </Button>
-        </form>
+            </form>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

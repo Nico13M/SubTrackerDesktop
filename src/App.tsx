@@ -210,7 +210,7 @@ function App() {
               <h2 className="text-2xl font-bold text-foreground">Tableau de bord</h2>
               <p className="text-muted-foreground">Gérez tous vos abonnements en un seul endroit</p>
             </div>
-            <AddSubscriptionDialog onAdd={addSubscription} />
+            <AddSubscriptionDialog onAdd={addSubscription} subscriptionCount={subscriptions.length} />
           </div>
 
           {/* Desktop Stats Bar */}
@@ -380,7 +380,7 @@ function App() {
 
           {/* Mobile Add Button */}
           <div className="lg:hidden">
-            <AddSubscriptionDialog onAdd={addSubscription} />
+            <AddSubscriptionDialog onAdd={addSubscription} subscriptionCount={subscriptions.length} />
           </div>
 
           {/* Detail Dialog */}

@@ -26,7 +26,7 @@ export function useAuth(): UseAuthReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
+  const API_BASE: string = import.meta.env.PROD ? (import.meta as any).env?.VITE_API_BASE ?? '' : 'http://localhost:3000';
 
   const getToken = () => sessionStorage.getItem('subtracker_token');
 
