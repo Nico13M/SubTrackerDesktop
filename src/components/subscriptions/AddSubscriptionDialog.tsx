@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Plus } from 'lucide-react';
-
+import PremiumPopup from './PremiumPopup';
 import SubscriptionAvatar from './SubscriptionAvatar';
 import { Subscription } from '@/types/subscription';
+import useAuth from "@/hooks/useAuth.ts";
 
 interface AddSubscriptionDialogProps {
   onAdd: (subscription: Omit<Subscription, 'id'>) => Promise<{ ok: true } | { ok: false; error: string }> | { ok: true } | { ok: false; error: string } | void;
@@ -48,10 +49,13 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
   const [category, setCategory] = useState('');
   const [color, setColor] = useState(colors[0]);
   const [nextPaymentDate, setNextPaymentDate] = useState('');
-  
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPremiumPopup, setShowPremiumPopup] = useState(false);
+  const API_BASE = import.meta.env.VITE_API_BASE;
+  const { getToken } = useAuth();
+  const token = getToken();
 
   const brands = [
     { id: 'spotify', label: 'Spotify', color: '#1DB954', icon: 'simple-icons:spotify' },
@@ -66,45 +70,59 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
     { id: 'edf', label: 'EDF', color: '#FFC000', icon: 'mage:electricity-fill' },
   ];
 
-  // image upload removed from UI
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
+
     setError(null);
-    
+
     if (!name || !price || !category || !nextPaymentDate) {
-      setError('Merci de remplir tous les champs obligatoires.');
+      setError('Merci de remplir tous les champs.');
       return;
     }
 
     setIsSubmitting(true);
-    try {
-      const result = await Promise.resolve(onAdd({
-        name,
-        price: parseFloat(price),
-        currency: '€',
-        billingCycle,
-        category,
-        color,
-        nextPaymentDate: new Date(nextPaymentDate),
-        startDate: new Date(),
-        icon: selectedIcon ?? undefined,
-      }));
 
-      if (result && 'ok' in result && !result.ok) {
-        setError(result.error);
+    try {
+      const res = await fetch(`${API_BASE}/api/subscriptions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name,
+          price: parseFloat(price),
+          billingCycle,
+          category,
+          color,
+          next_payment_date: nextPaymentDate,
+          icon: selectedIcon ?? null,
+        }),
+      });
+
+      const data = await res.json();
+
+      // 🚨 FREE LIMIT
+      if (!res.ok && data.error === 'FREE_LIMIT_REACHED') {
+        setShowPremiumPopup(true);
         return;
       }
 
-      // Reset form
+      if (!res.ok) {
+        setError(data.error || 'Erreur serveur');
+        return;
+      }
+
+      await onAdd?.(data.subscription);
+
+      // reset
       setName('');
       setPrice('');
-      setBillingCycle('monthly');
       setCategory('');
-      setColor(colors[0]);
       setNextPaymentDate('');
-      // imageUrl removed
       setSelectedIcon(null);
       setOpen(false);
     } finally {
@@ -202,7 +220,7 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="billing">Cycle</Label>
               <Select value={billingCycle} onValueChange={(v) => setBillingCycle(v as 'monthly' | 'yearly')}>
@@ -258,6 +276,22 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
               ))}
             </div>
           </div>
+
+          <PremiumPopup
+              open={showPremiumPopup}
+              onClose={() => setShowPremiumPopup(false)}
+              onUpgrade={async () => {
+                const res = await fetch(`${API_BASE}/api/stripe/create-checkout-session`, {
+                  method: 'POST',
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                });
+
+                const data = await res.json();
+                window.location.href = data.url;
+              }}
+          />
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
