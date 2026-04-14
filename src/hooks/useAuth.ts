@@ -45,6 +45,11 @@ export function useAuth(): UseAuthReturn {
       const data = await res.json();
       const token = data?.token;
       const user = data?.user ?? null;
+      // Vérification de la validation email côté front (is_active)
+      if (user && user.is_active === false) {
+        setError('Votre email n\'a pas encore été validé. Veuillez vérifier votre boîte mail.');
+        return { ok: false, error: 'Votre email n\'a pas encore été validé. Veuillez vérifier votre boîte mail.' };
+      }
       if (token) {
         sessionStorage.setItem('subtracker_token', token);
       }
@@ -73,6 +78,10 @@ export function useAuth(): UseAuthReturn {
       const data = await res.json();
       const token = data?.token;
       const user = data?.user ?? null;
+      // Si l'utilisateur n'est pas actif, ne pas stocker le token ni setUser
+      if (user && user.is_active === false) {
+        return { ok: true, user };
+      }
       if (token) {
         sessionStorage.setItem('subtracker_token', token);
       }

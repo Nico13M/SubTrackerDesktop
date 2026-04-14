@@ -1,6 +1,8 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import useAuth, { type UseAuthReturn } from '@/hooks/useAuth';
-import { Login } from '@/components/auth/Login';
+import Login from '@/components/auth/Login';
+import VerifiedPopup from '@/components/auth/VerifiedPopup';
+import { useSearchParams } from 'react-router-dom';
 import { ArrowUpDown, Settings, LogOut } from 'lucide-react';
 import {
   AnimatePresence,
@@ -43,6 +45,22 @@ function App() {
     getSubscriptionStats,
     error: subscriptionsError,
   } = useSubscriptions();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showVerifiedPopup, setShowVerifiedPopup] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (searchParams.get('verified') === 'true') {
+        setShowVerifiedPopup(true);
+        const params = new URLSearchParams(searchParams);
+        params.delete('verified');
+        setSearchParams(params, { replace: true });
+      }
+    } catch (e) {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   // App-level state hooks must be declared unconditionally to preserve hooks order
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -100,14 +118,13 @@ function App() {
 
   // Total des prochains paiements (somme des montants listés dans `upcomingSubscriptions`)
   const upcomingTotal = upcomingSubscriptions.reduce((sum, s) => sum + s.price, 0);
-
   return (
     <div className="min-h-screen bg-background">
       <motion.div
         className="fixed left-0 top-0 z-50 h-1 w-full origin-left bg-primary/70"
         style={{ scaleX: progressScaleX }}
       />
-
+      <VerifiedPopup open={showVerifiedPopup} onClose={() => setShowVerifiedPopup(false)} />
       {/* Sidebar for desktop */}
       <aside className="fixed left-0 top-0 hidden h-full w-64 border-r border-border bg-card p-6 lg:block">
         <h1 className="mb-8 text-2xl font-bold text-foreground">SubTracker</h1>

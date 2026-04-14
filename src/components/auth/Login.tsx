@@ -1,12 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useAuth from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 
-export function Login() {
-  const { login, signup, error, loading } = useAuth();
+function Login() {
+  const { login, signup, error, loading, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -33,13 +42,16 @@ export function Login() {
         if (!res.ok) {
           setLocalError(res.error ?? 'Échec inscription');
         } else {
-          window.location.reload();
+          navigate('/email-sent');
         }
       }
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Si déjà authentifié, on ne retourne rien (useEffect redirige)
+  if (isAuthenticated) return null;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
