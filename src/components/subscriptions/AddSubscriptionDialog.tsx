@@ -47,7 +47,7 @@ export function AddSubscriptionDialog({ onAdd, subscriptionCount = 0 }: AddSubsc
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [billing_cycle, setbilling_cycle] = useState<'monthly' | 'yearly'>('monthly');
   const [category, setCategory] = useState('');
   const [color, setColor] = useState(colors[0]);
   const [nextPaymentDate, setNextPaymentDate] = useState('');
@@ -56,10 +56,10 @@ export function AddSubscriptionDialog({ onAdd, subscriptionCount = 0 }: AddSubsc
   const [error, setError] = useState<string | null>(null);
   const [showPremiumPopup, setShowPremiumPopup] = useState(false);
   // use centralized api() helper so dev proxy works and prod uses VITE_API_BASE
-  const { getToken } = useAuth();
+  const { getToken, user } = useAuth();
   const token = getToken();
 
-  const hasReachedLimit = subscriptionCount >= 5;
+  const hasReachedLimit = subscriptionCount >= 5 && !user?.has_paid;
 
   const brands = [
     { id: 'spotify', label: 'Spotify', color: '#1DB954', icon: 'simple-icons:spotify' },
@@ -90,37 +90,25 @@ export function AddSubscriptionDialog({ onAdd, subscriptionCount = 0 }: AddSubsc
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(api('/api/subscriptions'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name,
-          price: parseFloat(price),
-          billingCycle,
-          category,
-          color,
-          next_payment_date: nextPaymentDate,
-          icon: selectedIcon ?? null,
-        }),
+      const res = await onAdd?.({
+        name,
+        price: parseFloat(price),
+        currency: '€',
+        billing_cycle: billing_cycle,
+        category,
+        color,
+        next_payment_date: new Date(nextPaymentDate),
+        icon: selectedIcon ?? undefined,
       });
 
-      const data = await res.json();
-
-      // 🚨 FREE LIMIT
-      if (!res.ok && data.error === 'FREE_LIMIT_REACHED') {
-        setShowPremiumPopup(true);
+      if (res && res.ok === false) {
+        if (res.error === 'FREE_LIMIT_REACHED') {
+          setShowPremiumPopup(true);
+        } else {
+          setError(res.error || 'Erreur serveur');
+        }
         return;
       }
-
-      if (!res.ok) {
-        setError(data.error || 'Erreur serveur');
-        return;
-      }
-
-      await onAdd?.(data.subscription);
 
       // reset
       setName('');
@@ -146,7 +134,7 @@ export function AddSubscriptionDialog({ onAdd, subscriptionCount = 0 }: AddSubsc
         {hasReachedLimit ? (
           <>
             <DialogHeader>
-              <DialogTitle>Limite gratuite atteinte 🚫</DialogTitle>
+              <DialogTitle>Limite gratuite atddteinte 🚫</DialogTitle>
             </DialogHeader>
             <div className="text-center py-4">
               <p className="text-gray-600 mb-4">
@@ -283,7 +271,7 @@ export function AddSubscriptionDialog({ onAdd, subscriptionCount = 0 }: AddSubsc
 
             <div className="space-y-2">
               <Label htmlFor="billing">Cycle</Label>
-              <Select value={billingCycle} onValueChange={(v) => setBillingCycle(v as 'monthly' | 'yearly')}>
+              <Select value={billing_cycle} onValueChange={(v) => setbilling_cycle(v as 'monthly' | 'yearly')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

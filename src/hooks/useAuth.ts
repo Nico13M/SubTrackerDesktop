@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { extractApiErrorMessage, formatApiError } from '@/lib/apiErrors';
 import { api } from '@/lib/api';
+import { User } from 'lucide-react';
 
-type User = { id: string; email: string; name?: string, notificationsEnabled?: boolean } | null;
-
+type User = { id: string; email: string; name?: string, notificationsEnabled?: boolean, has_paid?: boolean, is_active?: boolean } | null;
 type MutationResult<T> =
   | { ok: true; user?: User; token?: string; data?: T }
   | { ok: false; error: string };
@@ -26,7 +26,6 @@ export function useAuth(): UseAuthReturn {
   const [user, setUser] = useState<User>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   // use centralized api() helper; in dev this returns a relative path so Vite proxy can forward requests
   const getToken = () => sessionStorage.getItem('subtracker_token');
 

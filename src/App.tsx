@@ -3,7 +3,7 @@ import useAuth, { type UseAuthReturn } from '@/hooks/useAuth';
 import Login from '@/components/auth/Login';
 import VerifiedPopup from '@/components/auth/VerifiedPopup';
 import { useSearchParams } from 'react-router-dom';
-import { ArrowUpDown, Settings, LogOut } from 'lucide-react';
+import { ArrowUpDown, Settings, LogOut, Crown } from 'lucide-react';
 import {
   AnimatePresence,
   motion,
@@ -177,7 +177,19 @@ function App() {
         </div>
 
         {/* Settings at bottom of sidebar */}
-        <div className="absolute bottom-6 left-6 right-6 space-y-2">
+        <div className="absolute bottom-6 left-6 right-6 ">
+          <div className=" flex items-center justify-between rounded-xl border border-border bg-muted/40 p-3">
+            <span className="text-sm font-medium text-foreground">Plan</span>
+            {auth.user?.has_paid ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                <Crown className="h-3 w-3" /> Premium
+              </span>
+            ) : (
+              <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
+                Gratuit
+              </span>
+            )}
+          </div>
           <SettingsDialog />
               <Button variant="ghost" size="sm" onClick={() => { auth.logout(); window.location.reload(); }}
                 className="inline-flex items-center justify-start w-full gap-2 rounded-md bg-destructive/10 px-3 py-1 text-sm text-destructive">
@@ -192,7 +204,20 @@ function App() {
         <div className="mx-auto max-w-6xl px-4 py-6 lg:px-8 lg:py-8">
           {/* Mobile Header */}
           <div className="mb-6 flex items-center justify-between lg:hidden">
-            <h1 className="text-xl font-bold text-foreground">SubTracker</h1>
+            <div>
+              <h1 className="text-xl font-bold text-foreground">SubTracker</h1>
+              <div className="mt-1">
+                {auth.user?.has_paid ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                    <Crown className="h-3 w-3" /> Premium
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
+                    Gratuit
+                  </span>
+                )}
+              </div>
+            </div>
             <div className="flex items-center gap-2">
               <SettingsDialog />
               <Button variant="ghost" size="sm" onClick={() => { auth.logout(); window.location.reload(); }}

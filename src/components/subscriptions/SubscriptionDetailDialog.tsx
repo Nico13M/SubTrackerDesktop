@@ -77,7 +77,7 @@ export function SubscriptionDetailDialog({
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [billing_cycle, setbilling_cycle] = useState<'monthly' | 'yearly'>('monthly');
   const [category, setCategory] = useState('');
   const [color, setColor] = useState(colors[0]);
   const [nextPaymentDate, setNextPaymentDate] = useState('');
@@ -93,13 +93,12 @@ export function SubscriptionDetailDialog({
 
       setName(subscription.name);
       setPrice(subscription.price.toString());
-      setBillingCycle(subscription.billingCycle);
+      setbilling_cycle(subscription.billing_cycle);
       setCategory(subscription.category);
       setColor(subscription.color);
-      setNextPaymentDate(format(subscription.nextPaymentDate, 'yyyy-MM-dd'));
+      setNextPaymentDate(format(subscription.next_payment_date, 'yyyy-MM-dd'));
       setSelectedIcon(subscription.icon ?? subscription.name.charAt(0).toUpperCase());
       setIsEditing(true);
-      console.log(subscription.icon)
     }
   };
 
@@ -112,10 +111,10 @@ export function SubscriptionDetailDialog({
       const res = await Promise.resolve(onUpdate(subscription.id, {
         name,
         price: parseFloat(price),
-        billingCycle,
+        billing_cycle,
         category,
         color,
-        nextPaymentDate: new Date(nextPaymentDate),
+        next_payment_date: new Date(nextPaymentDate),
         icon: selectedIcon ?? undefined,
       } as Partial<Omit<Subscription, 'id'>>));
 
@@ -233,7 +232,7 @@ export function SubscriptionDetailDialog({
               
               <div className="space-y-2">
                 <Label htmlFor="edit-billing">Cycle</Label>
-                <Select value={billingCycle} onValueChange={(v) => setBillingCycle(v as 'monthly' | 'yearly')}>
+                <Select value={billing_cycle} onValueChange={(v) => setbilling_cycle(v as 'monthly' | 'yearly')}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -346,7 +345,7 @@ export function SubscriptionDetailDialog({
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Cycle</span>
                 <span className="font-medium">
-                  {subscription.billingCycle === 'monthly' ? 'Mensuel' : 'Annuel'}
+                  {subscription.billing_cycle === 'monthly' ? 'Mensuel' : 'Annuel'}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -354,7 +353,7 @@ export function SubscriptionDetailDialog({
                 <span className="font-medium">
                   {(() => {
                     const now = new Date();
-                    let nextDate = new Date(subscription.nextPaymentDate);
+                    let nextDate = new Date(subscription.next_payment_date);
                     nextDate.setHours(0,0,0,0);
                     now.setHours(0,0,0,0);
                     const originalDay = nextDate.getDate();
@@ -377,7 +376,7 @@ export function SubscriptionDetailDialog({
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Prix</span>
                 <span className="font-medium">
-                  {subscription.currency}{subscription.price.toFixed(2)} / {subscription.billingCycle === 'monthly' ? 'mois' : 'an'}
+                  {subscription.currency}{subscription.price.toFixed(2)} / {subscription.billing_cycle === 'monthly' ? 'mois' : 'an'}
                 </span>
               </div>
             </div>

@@ -3,9 +3,9 @@ export interface Subscription {
   name: string;
   price: number;
   currency: string;
-  billingCycle: 'monthly' | 'yearly';
-  nextPaymentDate: Date;
-  startDate?: Date;
+  billing_cycle: 'monthly' | 'yearly';
+  next_payment_date: Date;
+  start_date?: Date;
   category: string;
   color: string;
   icon?: string;

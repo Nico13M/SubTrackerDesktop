@@ -33,6 +33,28 @@ export function SettingsDialog() {
   const [isSavingNotifications, setIsSavingNotifications] = useState(false);
   const [notificationsError, setNotificationsError] = useState<string | null>(null);
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      const token = sessionStorage.getItem('subtracker_token');
+      // On suppose que la route pour supprimer le compte utilisateur est DELETE /api/user
+      const res = await fetch(api('/api/user/delete'), {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Erreur API lors de la suppression');
+      logout();
+      window.location.reload();
+    } catch (e) {
+      console.error('Erreur lors de la suppression du compte', e);
+      alert('Impossible de supprimer le compte.');
+      setIsDeleting(false);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       setNotificationsEnabled(user.notificationsEnabled ?? false);
@@ -161,14 +183,49 @@ export function SettingsDialog() {
           {/* Auth actions */}
           <div className="rounded-xl bg-muted/50 p-4">
             <h3 className="font-semibold mb-3">Compte</h3>
-            <div className="flex justify-center gap-2">
-              <button
-                onClick={() => { logout(); window.location.reload(); }}
-                className="inline-flex items-center justify-center rounded-md bg-destructive/10 px-3 py-1 text-sm text-destructive"
-              >
-                Déconnexion
-              </button>
-            </div>
+            {showDeleteConfirm ? (
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-destructive">
+                  Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible et supprimera toutes vos données.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="w-full"
+                    onClick={handleDeleteAccount}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Oui, supprimer
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={isDeleting}
+                  >
+                    Annuler
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => { logout(); window.location.reload(); }}
+                  className="inline-flex items-center justify-center w-full rounded-md bg-secondary/30 px-3 py-2 text-sm font-medium transition-colors hover:bg-secondary/40"
+                >
+                  Déconnexion
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="inline-flex items-center justify-center w-full rounded-md bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/20"
+                >
+                  Supprimer le compte
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>

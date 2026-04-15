@@ -60,7 +60,7 @@ export function useSubscriptions() {
   const parseSubscription = (raw: any): Subscription => {
     const nextRaw = raw.nextPaymentDate ?? raw.next_payment_date ?? raw.next_payment ?? null;
     const startRaw = raw.startDate ?? raw.start_date ?? null;
-    const billing = (raw.billingCycle ?? raw.billing_cycle) as 'monthly' | 'yearly' | undefined;
+    const billing = (raw.billing_cycle ?? raw.billing_cycle) as 'monthly' | 'yearly' | undefined;
 
     // Normalize icon value: accept brand ids (spotify, netflix...), initials, or full names.
     function normalizeIcon(rawIcon: any, nameVal: string | undefined): string | undefined {
@@ -98,8 +98,8 @@ export function useSubscriptions() {
       name: raw.name ?? raw.title ?? 'Untitled',
       price: Number(raw.price ?? 0),
       currency: raw.currency ?? '€',
-      billingCycle: billing ?? 'monthly',
-      nextPaymentDate: nextRaw ? parseISODate(nextRaw) ?? new Date() : new Date(),
+      billing_cycle: billing ?? 'monthly',
+      next_payment_date: nextRaw ? parseISODate(nextRaw) ?? new Date() : new Date(),
       startDate: startRaw ? parseISODate(startRaw) : undefined,
       category: raw.category ?? 'Other',
       color: raw.color ?? 'hsl(220, 80%, 50%)',
@@ -153,9 +153,9 @@ export function useSubscriptions() {
         name: newSub.name,
         price: newSub.price,
         currency: newSub.currency,
-        billing_cycle: newSub.billingCycle,
-        next_payment_date: serializeDateForBackend(newSub.nextPaymentDate),
-        start_date: serializeDateForBackend(newSub.startDate),
+        billing_cycle: newSub.billing_cycle,
+        next_payment_date: serializeDateForBackend(newSub.next_payment_date),
+        start_date: serializeDateForBackend(newSub.start_date),
         category: newSub.category,
         color: newSub.color,
         icon: newSub.icon,
@@ -201,9 +201,9 @@ export function useSubscriptions() {
       if (updates.name !== undefined) payload.name = updates.name;
       if (updates.price !== undefined) payload.price = updates.price;
       if (updates.currency !== undefined) payload.currency = updates.currency;
-      if (updates.billingCycle !== undefined) payload.billing_cycle = updates.billingCycle;
-      if (updates.nextPaymentDate !== undefined) payload.next_payment_date = serializeDateForBackend(updates.nextPaymentDate as Date | null);
-      if (updates.startDate !== undefined) payload.start_date = serializeDateForBackend(updates.startDate as Date | null);
+      if (updates.billing_cycle !== undefined) payload.billing_cycle = updates.billing_cycle;
+      if (updates.next_payment_date !== undefined) payload.next_payment_date = serializeDateForBackend(updates.next_payment_date as Date | null);
+      if (updates.start_date !== undefined) payload.start_date = serializeDateForBackend(updates.start_date as Date | null);
       if (updates.category !== undefined) payload.category = updates.category;
       if (updates.color !== undefined) payload.color = updates.color;
       if (updates.icon !== undefined) payload.icon = updates.icon;
@@ -236,7 +236,7 @@ export function useSubscriptions() {
         const newSubs = prev.map((sub) => {
           if (sub.id !== id) return sub;
 
-          const hasFields = updatedItem && (updatedItem.name || updatedItem.price || updatedItem.next_payment_date || updatedItem.nextPaymentDate || updatedItem.billing_cycle || updatedItem.billingCycle);
+          const hasFields = updatedItem && (updatedItem.name || updatedItem.price || updatedItem.next_payment_date || updatedItem.nextPaymentDate || updatedItem.billing_cycle || updatedItem.billing_cycle);
 
           if (hasFields) {
             const parsed = parseSubscription(updatedItem);
@@ -250,9 +250,9 @@ export function useSubscriptions() {
             name: updates.name ?? sub.name,
             price: updates.price ?? sub.price,
             currency: updates.currency ?? sub.currency,
-            billingCycle: updates.billingCycle ?? sub.billingCycle,
-            nextPaymentDate: updates.nextPaymentDate ?? sub.nextPaymentDate,
-            startDate: updates.startDate ?? sub.startDate,
+            billing_cycle: updates.billing_cycle ?? sub.billing_cycle,
+            next_payment_date: updates.next_payment_date ?? sub.next_payment_date,
+            start_date: updates.start_date ?? sub.start_date,
             category: updates.category ?? sub.category,
             color: updates.color ?? sub.color,
             icon: updates.icon ?? sub.icon,
@@ -307,13 +307,13 @@ export function useSubscriptions() {
   };
 
   const getSubscriptionStats = (subscription: Subscription) => {
-    const startDate = subscription.startDate || new Date();
+    const startDate = subscription.start_date || new Date();
     const monthsActive = Math.max(1, differenceInMonths(new Date(), startDate) + 1);
-    const monthlyPrice = subscription.billingCycle === 'yearly' 
+    const monthlyPrice = subscription.billing_cycle === 'yearly' 
       ? subscription.price / 12 
       : subscription.price;
     const totalSpent = monthlyPrice * monthsActive;
-    const yearlyPrice = subscription.billingCycle === 'yearly' 
+    const yearlyPrice = subscription.billing_cycle === 'yearly' 
       ? subscription.price 
       : subscription.price * 12;
 
@@ -329,7 +329,7 @@ export function useSubscriptions() {
     const sorted = [...subscriptions];
     switch (sortBy) {
       case 'recent':
-        return sorted.sort((a, b) => a.nextPaymentDate.getTime() - b.nextPaymentDate.getTime());
+        return sorted.sort((a, b) => a.next_payment_date.getTime() - b.next_payment_date.getTime());
       case 'name':
         return sorted.sort((a, b) => a.name.localeCompare(b.name));
       case 'price':
@@ -343,7 +343,7 @@ export function useSubscriptions() {
     const now = new Date();
 
     function getNextPaymentDate(sub: Subscription): Date {
-      let nextDate = new Date(sub.nextPaymentDate);
+      let nextDate = new Date(sub.next_payment_date);
       nextDate.setHours(0,0,0,0);
       now.setHours(0,0,0,0);
       const originalDay = nextDate.getDate();
@@ -383,7 +383,7 @@ export function useSubscriptions() {
 
   const stats = useMemo(() => {
     const monthlyTotal = subscriptions.reduce((acc, sub) => {
-      const monthlyPrice = sub.billingCycle === 'yearly' ? sub.price / 12 : sub.price;
+      const monthlyPrice = sub.billing_cycle === 'yearly' ? sub.price / 12 : sub.price;
       return acc + monthlyPrice;
     }, 0);
 
