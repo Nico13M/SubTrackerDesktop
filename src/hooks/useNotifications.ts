@@ -23,7 +23,7 @@ export function useNotifications() {
         to_email: user.email,
         subscription_name: sub.name,
         amount: sub.price,
-        due_date: sub.nextPaymentDate,
+        due_date: sub.next_payment_date,
         app_url: window.location.origin,
       };
 
@@ -40,7 +40,7 @@ export function useNotifications() {
     threeDaysFromNow.setDate(today.getDate() + 3);
 
     const upcomingSubscriptions = subscriptions.filter(sub => {
-      const paymentDate = new Date(sub.nextPaymentDate);
+      const paymentDate = new Date(sub.next_payment_date);
       return paymentDate <= threeDaysFromNow && paymentDate >= today;
     });
 
