@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import PasswordChangedPopup from '@/components/auth/PasswordChangedPopup';
 import useAuth from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,12 +10,20 @@ import { Loader2 } from 'lucide-react';
 function Login() {
   const { login, signup, error, loading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [showPasswordChanged, setShowPasswordChanged] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    const pwChanged = (location.state as any)?.passwordChanged;
+    if (pwChanged) setShowPasswordChanged(true);
+  }, [location]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -54,8 +63,10 @@ function Login() {
   if (isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-sm mx-4 rounded-2xl bg-card p-6 shadow">
+    <>
+      <PasswordChangedPopup open={showPasswordChanged} onClose={() => setShowPasswordChanged(false)} />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-full max-w-sm mx-4 rounded-2xl bg-card p-6 shadow">
         <h2 className="mb-4 text-xl font-bold">{isSignup ? 'Créer un compte' : 'Se connecter'}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           {isSignup && (
@@ -71,6 +82,15 @@ function Login() {
           <div className="space-y-1">
             <Label>Mot de passe</Label>
             <Input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required disabled={isSubmitting} />
+          </div>
+          <div className="text-right">
+            <button
+              className="text-sm text-primary underline"
+              onClick={(e) => { e.preventDefault(); navigate('/forgot-password'); }}
+              disabled={isSubmitting}
+            >
+              Mot de passe oublié ?
+            </button>
           </div>
           {(localError || error) && <p className="text-sm text-destructive">{localError ?? error}</p>}
           <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -92,8 +112,9 @@ function Login() {
             {isSignup ? 'J’ai déjà un compte — Se connecter' : 'Créer un compte'}
           </button>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

@@ -7,7 +7,10 @@ import Login from '@/components/auth/Login';
 import Stripe from '@/components/Stripe';
 import Success from '@/components/Success';
 import Pricing from '@/components/Pricing';
-
+import ForgotPassword from '@/components/auth/ForgotPassword';
+import PasswordResetSent from '@/components/auth/PasswordResetSent';
+import ResetPassword from '@/components/auth/ResetPassword';
+        
 const Router: React.FC = () => (
   <BrowserRouter>
     <Routes>
@@ -16,6 +19,9 @@ const Router: React.FC = () => (
       <Route path="/stripe" element={<Stripe />} />
       <Route path="/success" element={<Success />} />
       <Route path="/pricing" element={<Pricing />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/password-reset-sent" element={<PasswordResetSent />} />
       <Route path="/email-sent" element={<EmailSent />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
     </Routes>
