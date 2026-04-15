@@ -6,14 +6,14 @@ import { Settings, Bell, Info, Loader2 } from 'lucide-react';
 import { useSubscriptions } from '@/hooks/useSubscriptions';
 import useAuth from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
+import { api } from '@/lib/api';
 
 export function SettingsDialog() {
     // Fonction pour récupérer la valeur notificationsEnabled depuis l'API
     const fetchNotificationSetting = async () => {
       try {
         const token = sessionStorage.getItem('subtracker_token');
-        const API_BASE = (import.meta as any).env?.VITE_API_BASE ?? '';
-        const res = await fetch(`${API_BASE}/api/auth/me`, {
+        const res = await fetch(api('/api/auth/me'), {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error('Erreur API');

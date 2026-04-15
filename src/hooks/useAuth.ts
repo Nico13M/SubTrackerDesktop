@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { extractApiErrorMessage, formatApiError } from '@/lib/apiErrors';
+import { api } from '@/lib/api';
 
 type User = { id: string; email: string; name?: string, notificationsEnabled?: boolean } | null;
 
@@ -26,14 +27,13 @@ export function useAuth(): UseAuthReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const API_BASE: string = import.meta.env.PROD ? (import.meta as any).env?.VITE_API_BASE ?? '' : 'http://localhost:3000';
-
+  // use centralized api() helper; in dev this returns a relative path so Vite proxy can forward requests
   const getToken = () => sessionStorage.getItem('subtracker_token');
 
   const login = async (email: string, password: string): Promise<MutationResult<User>> => {
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
+      const res = await fetch(api('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -66,7 +66,7 @@ export function useAuth(): UseAuthReturn {
   const signup = async (email: string, password: string, name?: string): Promise<MutationResult<User>> => {
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/signup`, {
+      const res = await fetch(api('/api/auth/signup'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, name }),
@@ -104,7 +104,7 @@ export function useAuth(): UseAuthReturn {
     const current = token ?? getToken();
     if (!current) return { ok: false, error: 'No token' };
     try {
-      const res = await fetch(`${API_BASE}/api/auth/refresh`, {
+      const res = await fetch(api('/api/auth/refresh'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${current}` },
         body: JSON.stringify({ token: current }),
@@ -135,7 +135,7 @@ export function useAuth(): UseAuthReturn {
       return null;
     }
     try {
-      const res = await fetch(`${API_BASE}/api/auth/me`, {
+      const res = await fetch(api('/api/auth/me'), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
@@ -144,7 +144,7 @@ export function useAuth(): UseAuthReturn {
           const r = await refresh(token);
           if (r.ok && r.token) {
             // retry fetchMe once
-            const res2 = await fetch(`${API_BASE}/api/auth/me`, {
+            const res2 = await fetch(api('/api/auth/me'), {
               headers: { Authorization: `Bearer ${r.token}` },
             });
             if (!res2.ok) throw new Error(`HTTP ${res2.status}`);
@@ -172,7 +172,7 @@ export function useAuth(): UseAuthReturn {
     if (!token) return { ok: false, error: 'No token' };
 
     try {
-      const res = await fetch(`${API_BASE}/api/user/settings`, {
+      const res = await fetch(api('/api/user/settings'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

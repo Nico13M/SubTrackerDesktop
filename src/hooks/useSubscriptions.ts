@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Subscription, SortOption } from '@/types/subscription';
 import { extractApiErrorMessage, formatApiError } from '@/lib/apiErrors';
+import { api } from '@/lib/api';
 
 // Helper function to calculate months difference
 function differenceInMonths(dateLeft: Date, dateRight: Date): number {
@@ -110,12 +111,9 @@ export function useSubscriptions() {
   const fetchSubscriptions = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const API_BASE: string = import.meta.env.PROD ? (import.meta as any).env?.VITE_API_BASE ?? '' : 'http://localhost:3000';
-
-
     try {
       const token = sessionStorage.getItem('subtracker_token');
-      const res = await fetch(`${API_BASE}/api/subscriptions`, {
+      const res = await fetch(api('/api/subscriptions'), {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
       if (!res.ok) {
@@ -145,8 +143,7 @@ export function useSubscriptions() {
 
   const addSubscription = async (newSub: Omit<Subscription, 'id'>): Promise<MutationResult<Subscription>> => {
     try {
-      const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
-
+      // use api() helper
       const token = sessionStorage.getItem('subtracker_token');
       const headers: any = { 'Content-Type': 'application/json' };
       if (token) headers.Authorization = `Bearer ${token}`;
@@ -164,7 +161,7 @@ export function useSubscriptions() {
         icon: newSub.icon,
       };
 
-      const res = await fetch(`${API_BASE}/api/subscriptions`, {
+      const res = await fetch(api('/api/subscriptions'), {
         method: 'POST',
         headers,
         body: JSON.stringify(payload),
@@ -195,8 +192,7 @@ export function useSubscriptions() {
 
   const updateSubscription = async (id: string, updates: Partial<Omit<Subscription, 'id'>>): Promise<MutationResult<Subscription>> => {
     try {
-      const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
-
+      // use api() helper
       const token = sessionStorage.getItem('subtracker_token');
       const headers: any = { 'Content-Type': 'application/json' };
       if (token) headers.Authorization = `Bearer ${token}`;
@@ -213,7 +209,7 @@ export function useSubscriptions() {
       if (updates.icon !== undefined) payload.icon = updates.icon;
       // image updates removed from UI; ignore image updates
 
-      const res = await fetch(`${API_BASE}/api/subscriptions/${id}`, {
+      const res = await fetch(api(`/api/subscriptions/${id}`), {
         method: 'PUT',
         headers,
         body: JSON.stringify(payload),
@@ -294,10 +290,8 @@ export function useSubscriptions() {
 
   const removeSubscription = async (id: string): Promise<MutationResult<null>> => {
     try {
-      const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
-
       const token = sessionStorage.getItem('subtracker_token');
-      const res = await fetch(`${API_BASE}/api/subscriptions/${id}`, { method: 'DELETE', headers: token ? { Authorization: `Bearer ${token}` } : undefined });
+      const res = await fetch(api(`/api/subscriptions/${id}`), { method: 'DELETE', headers: token ? { Authorization: `Bearer ${token}` } : undefined });
       if (!res.ok) {
         const message = await extractApiErrorMessage(res, `HTTP ${res.status}`);
         return { ok: false, error: formatApiError(message, res.status, 'Impossible de supprimer l’abonnement.') };

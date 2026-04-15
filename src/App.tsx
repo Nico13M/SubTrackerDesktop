@@ -47,13 +47,27 @@ function App() {
   } = useSubscriptions();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showVerifiedPopup, setShowVerifiedPopup] = useState(false);
+  const [showCanceled, setShowCanceled] = useState(false);
 
   useEffect(() => {
     try {
-      if (searchParams.get('verified') === 'true') {
+      let changed = false;
+      const params = new URLSearchParams(searchParams);
+
+      if (params.get('verified') === 'true') {
         setShowVerifiedPopup(true);
-        const params = new URLSearchParams(searchParams);
         params.delete('verified');
+        changed = true;
+      }
+
+      if (params.get('payment') === 'failed' || params.get('canceled') === 'true') {
+        setShowCanceled(true);
+        params.delete('payment');
+        params.delete('canceled');
+        changed = true;
+      }
+
+      if (changed) {
         setSearchParams(params, { replace: true });
       }
     } catch (e) {
@@ -125,6 +139,17 @@ function App() {
         style={{ scaleX: progressScaleX }}
       />
       <VerifiedPopup open={showVerifiedPopup} onClose={() => setShowVerifiedPopup(false)} />
+      {showCanceled && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-card p-6 rounded-xl max-w-sm w-full text-center shadow-lg">
+            <h2 className="text-xl font-bold mb-2 text-foreground">Paiement annulé</h2>
+            <p className="text-muted-foreground mb-4">Échec du paiement — veuillez réessayer ou annuler l'opération.</p>
+            <div className="flex justify-center gap-2">
+              <Button onClick={() => setShowCanceled(false)}>Fermer</Button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Sidebar for desktop */}
       <aside className="fixed left-0 top-0 hidden h-full w-64 border-r border-border bg-card p-6 lg:block">
         <h1 className="mb-8 text-2xl font-bold text-foreground">SubTracker</h1>

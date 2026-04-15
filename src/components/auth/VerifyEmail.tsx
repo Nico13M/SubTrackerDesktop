@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { api } from '@/lib/api';
 
 const VerifyEmail: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<'pending' | 'success' | 'error'>("pending");
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
-  const API_BASE: string = import.meta.env.PROD ? (import.meta as any).env?.VITE_API_BASE ?? '' : 'http://localhost:3000';
-
   useEffect(() => {
     const token = searchParams.get('token');
     if (!token) {
@@ -15,15 +14,16 @@ const VerifyEmail: React.FC = () => {
       setMessage('Token manquant.');
       return;
     }
-    fetch(`${API_BASE}/api/auth/verify-email?token=${token}`)
+    fetch(api(`/api/auth/verify-email?token=${token}`))
       .then(async (res) => {
-        const data = await res.json();
+        const contentType = res.headers.get('content-type') || '';
+        const data = contentType.includes('application/json') ? await res.json() : null;
         if (res.ok && data.success) {
           setStatus('success');
           setMessage('Votre email a été vérifié avec succès. Vous pouvez maintenant vous connecter.');
         } else {
           setStatus('error');
-          setMessage(data.error || 'Erreur lors de la vérification.');
+          setMessage((data && data.error) || 'Erreur lors de la vérification.');
         }
       })
       .catch(() => {

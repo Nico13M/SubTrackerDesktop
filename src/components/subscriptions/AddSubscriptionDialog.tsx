@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -54,7 +55,7 @@ export function AddSubscriptionDialog({ onAdd, subscriptionCount = 0 }: AddSubsc
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPremiumPopup, setShowPremiumPopup] = useState(false);
-  const API_BASE: string = import.meta.env.PROD ? (import.meta as any).env?.VITE_API_BASE ?? '' : 'http://localhost:3000';
+  // use centralized api() helper so dev proxy works and prod uses VITE_API_BASE
   const { getToken } = useAuth();
   const token = getToken();
 
@@ -89,7 +90,7 @@ export function AddSubscriptionDialog({ onAdd, subscriptionCount = 0 }: AddSubsc
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(`${API_BASE}/api/subscriptions`, {
+      const res = await fetch(api('/api/subscriptions'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -143,41 +144,59 @@ export function AddSubscriptionDialog({ onAdd, subscriptionCount = 0 }: AddSubsc
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         {hasReachedLimit ? (
-          // Show premium popup instead of form
-          <div className="text-center py-4">
-            <h2 className="text-xl font-bold mb-2">
-              Limite gratuite atteinte 🚫
-            </h2>
+          <>
+            <DialogHeader>
+              <DialogTitle>Limite gratuite atteinte 🚫</DialogTitle>
+            </DialogHeader>
+            <div className="text-center py-4">
+              <p className="text-gray-600 mb-4">
+                Vous avez atteint la limite de 5 abonnements.
+                Passez au Premium pour continuer.
+              </p>
 
-            <p className="text-gray-600 mb-4">
-              Vous avez atteint la limite de 5 abonnements.
-              Passez au Premium pour continuer.
-            </p>
+              <button
+                className="bg-black text-white px-4 py-2 rounded-lg w-full mb-3"
+                onClick={async () => {
+                  try {
+                    const res = await fetch(api('/api/stripe/create-checkout-session'), {
+                      method: 'POST',
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                      },
+                    });
 
-            <button
-              className="bg-black text-white px-4 py-2 rounded-lg w-full mb-3"
-              onClick={async () => {
-                const res = await fetch(`${API_BASE}/api/stripe/create-checkout-session`, {
-                  method: 'POST',
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
-                });
+                    if (!res.ok) {
+                      const text = await res.text().catch(() => '');
+                      setError(text || `Erreur serveur ${res.status}`);
+                      return;
+                    }
 
-                const data = await res.json();
-                window.location.href = data.url;
-              }}
-            >
-              Passer Premium
-            </button>
+                    const contentType = res.headers.get('content-type') || '';
+                    const data = contentType.includes('application/json') ? await res.json() : null;
 
-            <button
-              className="text-sm text-gray-500 underline w-full"
-              onClick={() => setOpen(false)}
-            >
-              Fermer
-            </button>
-          </div>
+                    if (!data || !data.url) {
+                      setError('Réponse inattendue du serveur lors de la création de la session de paiement.');
+                      return;
+                    }
+
+                    window.location.href = data.url;
+                  } catch (err: any) {
+                    console.error('create-checkout-session error', err);
+                    setError('Erreur réseau lors de la création de la session de paiement.');
+                  }
+                }}
+              >
+                Passer Premium
+              </button>
+
+              <button
+                className="text-sm text-gray-500 underline w-full"
+                onClick={() => setOpen(false)}
+              >
+                Fermer
+              </button>
+            </div>
+          </>
         ) : (
           <>
             <DialogHeader>
@@ -322,16 +341,34 @@ export function AddSubscriptionDialog({ onAdd, subscriptionCount = 0 }: AddSubsc
               open={showPremiumPopup}
               onClose={() => setShowPremiumPopup(false)}
               onUpgrade={async () => {
-                const res = await fetch(`${API_BASE}/api/stripe/create-checkout-session`, {
-                  method: 'POST',
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
-                });
+                    try {
+                      const res = await fetch(api('/api/stripe/create-checkout-session'), {
+                        method: 'POST',
+                        headers: {
+                          Authorization: `Bearer ${token}`,
+                        },
+                      });
 
-                const data = await res.json();
-                window.location.href = data.url;
-              }}
+                      if (!res.ok) {
+                        const text = await res.text().catch(() => '');
+                        setError(text || `Erreur serveur ${res.status}`);
+                        return;
+                      }
+
+                      const contentType = res.headers.get('content-type') || '';
+                      const data = contentType.includes('application/json') ? await res.json() : null;
+
+                      if (!data || !data.url) {
+                        setError('Réponse inattendue du serveur lors de la création de la session de paiement.');
+                        return;
+                      }
+
+                      window.location.href = data.url;
+                    } catch (err: any) {
+                      console.error('create-checkout-session error', err);
+                      setError('Erreur réseau lors de la création de la session de paiement.');
+                    }
+                  }}
           />
 
           <Button type="submit" className="w-full" disabled={isSubmitting}>
