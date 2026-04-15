@@ -9,7 +9,10 @@ const ForgotPassword: React.FC = () => {
   const [status, setStatus] = useState<'idle' | 'pending' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
-  const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
+  const isProd = (import.meta as any).env?.MODE === 'production';
+  const API_BASE: string = isProd
+    ? (import.meta as any).env?.VITE_API_BASE ?? ''
+    : 'http://localhost:3000';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

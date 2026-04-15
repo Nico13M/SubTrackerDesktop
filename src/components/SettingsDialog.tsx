@@ -35,7 +35,7 @@ export function SettingsDialog() {
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
+    
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {

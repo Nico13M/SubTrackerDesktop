@@ -8,7 +8,10 @@ import { Loader2 } from 'lucide-react';
 const ResetPassword: React.FC = () => {
   const navigate = useNavigate();
   const token = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('token') : null;
-  const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
+  const isProd = (import.meta as any).env?.MODE === 'production';
+  const API_BASE: string = isProd
+    ? (import.meta as any).env?.VITE_API_BASE ?? ''
+    : 'http://localhost:3000';
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

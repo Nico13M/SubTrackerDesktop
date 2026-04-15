@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { api } from '@/lib/api';
 import VerifiedPopup from '@/components/auth/VerifiedPopup';
 
 
@@ -17,7 +16,10 @@ const VerifyEmail: React.FC = () => {
       setMessage('Token manquant.');
       return;
     }
-    const API_BASE: string = (import.meta as any).env?.VITE_API_BASE ?? '';
+    const isProd = (import.meta as any).env?.MODE === 'production';
+    const API_BASE: string = isProd
+      ? (import.meta as any).env?.VITE_API_BASE ?? ''
+      : 'http://localhost:3000';
     fetch(`${API_BASE}/api/auth/verify-email?token=${token}`)
       .then(async (res) => {
         const contentType = res.headers.get('content-type') || '';

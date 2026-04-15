@@ -6,6 +6,10 @@ import { Button } from '@/components/ui/button';
 
 const Stripe: React.FC = () => {
   const location = useLocation();
+   const isProd = (import.meta as any).env?.MODE === 'production';
+    const API_BASE: string = isProd
+      ? (import.meta as any).env?.VITE_API_BASE ?? ''
+      : 'http://localhost:3000';
   const navigate = useNavigate();
   const { getToken } = useAuth();
   const token = getToken();
@@ -24,7 +28,7 @@ const Stripe: React.FC = () => {
     setStatus('verifying');
     setMessage(null);
     try {
-      const url = api(`/api/stripe/verify?session_id=${encodeURIComponent(sessionId)}`);
+      const url = api(`${API_BASE}/api/stripe/verify?session_id=${encodeURIComponent(sessionId)}`);
       const res = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });

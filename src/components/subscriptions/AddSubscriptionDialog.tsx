@@ -17,16 +17,16 @@ interface AddSubscriptionDialogProps {
 }
 
 const categories = [
-  'Entertainment',
-  'Music',
+  'Divertissement',
+  'Musique',
   'Fitness',
-  'Insurance',
-  'Phone',
+  'Assurance',
+  'Téléphone',
   'Cloud',
   'Shopping',
   'Streaming',
-  'Software',
-  'Other'
+  'Logiciel',
+  'Autre'
 ];
 
 const colors = [
