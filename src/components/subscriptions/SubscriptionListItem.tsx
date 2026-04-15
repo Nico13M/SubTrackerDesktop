@@ -14,7 +14,7 @@ interface SubscriptionListItemProps {
 
 export function SubscriptionListItem({ subscription, onClick }: SubscriptionListItemProps) {
   // Toujours prendre la prochaine échéance future, même si la date initiale est dans le passé sur plusieurs mois
-  let nextPaymentDate = new Date(subscription.nextPaymentDate);
+  let nextPaymentDate = new Date(subscription.next_payment_date);
   const now = new Date();
   nextPaymentDate.setHours(0,0,0,0);
   now.setHours(0,0,0,0);
@@ -33,11 +33,11 @@ export function SubscriptionListItem({ subscription, onClick }: SubscriptionList
   }
   const daysUntilPayment = getDaysUntil(nextPaymentDate);
   
-  const yearlyPrice = subscription.billingCycle === 'monthly' 
+  const yearlyPrice = subscription.billing_cycle === 'monthly' 
     ? subscription.price * 12 
     : subscription.price;
   
-  const monthlyPrice = subscription.billingCycle === 'yearly' 
+  const monthlyPrice = subscription.billing_cycle === 'yearly' 
     ? subscription.price / 12 
     : subscription.price;
 

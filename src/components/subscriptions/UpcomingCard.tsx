@@ -13,7 +13,7 @@ interface UpcomingCardProps {
 
 export function UpcomingCard({ subscription, onClick }: UpcomingCardProps) {
   // Calculer la prochaine échéance future
-  let nextPaymentDate = new Date(subscription.nextPaymentDate);
+  let nextPaymentDate = new Date(subscription.next_payment_date);
   const now = new Date();
   nextPaymentDate.setHours(0,0,0,0);
   now.setHours(0,0,0,0);
@@ -38,7 +38,7 @@ export function UpcomingCard({ subscription, onClick }: UpcomingCardProps) {
   const isToday = daysUntilPayment === 0;
   const isUrgent = daysUntilPayment < 4 && daysUntilPayment > 0;
 
-  const monthlyPrice = subscription.billingCycle === 'yearly' 
+  const monthlyPrice = subscription.billing_cycle === 'yearly' 
     ? subscription.price / 12 
     : subscription.price;
 

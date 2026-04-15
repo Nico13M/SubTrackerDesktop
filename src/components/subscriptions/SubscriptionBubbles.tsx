@@ -13,8 +13,8 @@ export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps)
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   // Calcul de la taille basée sur le prix
-  const getBubbleSize = (price: number, billingCycle: string) => {
-    const monthlyPrice = billingCycle === 'yearly' ? price / 12 : price;
+  const getBubbleSize = (price: number, billing_cycle: string) => {
+    const monthlyPrice = billing_cycle === 'yearly' ? price / 12 : price;
     
     if (monthlyPrice >= 100) return 'w-14 h-14 text-base';
     if (monthlyPrice >= 50) return 'w-10 h-10 text-sm';
@@ -24,17 +24,17 @@ export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps)
   };
 
   const getMonthlyPrice = (sub: Subscription) => {
-    return sub.billingCycle === 'yearly' ? sub.price / 12 : sub.price;
+    return sub.billing_cycle === 'yearly' ? sub.price / 12 : sub.price;
   };
 
   const getYearlyPrice = (sub: Subscription) => {
-    return sub.billingCycle === 'yearly' ? sub.price : sub.price * 12;
+    return sub.billing_cycle === 'yearly' ? sub.price : sub.price * 12;
   };
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-2 w-full">
       {displaySubs.map((sub) => {
-        const sizeClass = getBubbleSize(sub.price, sub.billingCycle);
+        const sizeClass = getBubbleSize(sub.price, sub.billing_cycle);
         const monthlyPrice = getMonthlyPrice(sub);
         const yearlyPrice = getYearlyPrice(sub);
         const getIconPx = (sc: string) => {
@@ -109,7 +109,7 @@ export function SubscriptionBubbles({ subscriptions }: SubscriptionBubblesProps)
                       </div>
                       <div className="flex justify-between pt-1 border-t border-border/50">
                         <span className="text-muted-foreground">Facturation</span>
-                        <span className="font-medium">{sub.billingCycle === 'monthly' ? 'Mensuelle' : 'Annuelle'}</span>
+                        <span className="font-medium">{sub.billing_cycle === 'monthly' ? 'Mensuelle' : 'Annuelle'}</span>
                       </div>
                     </div>
                   </motion.div>

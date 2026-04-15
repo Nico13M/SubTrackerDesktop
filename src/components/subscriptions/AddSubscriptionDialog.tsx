@@ -1,16 +1,19 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Plus } from 'lucide-react';
-
+import PremiumPopup from './PremiumPopup';
 import SubscriptionAvatar from './SubscriptionAvatar';
 import { Subscription } from '@/types/subscription';
+import useAuth from "@/hooks/useAuth.ts";
 
 interface AddSubscriptionDialogProps {
   onAdd: (subscription: Omit<Subscription, 'id'>) => Promise<{ ok: true } | { ok: false; error: string }> | { ok: true } | { ok: false; error: string } | void;
+  subscriptionCount?: number;
 }
 
 const categories = [
@@ -40,18 +43,23 @@ const colors = [
 
 ];
 
-export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
+export function AddSubscriptionDialog({ onAdd, subscriptionCount = 0 }: AddSubscriptionDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [billing_cycle, setbilling_cycle] = useState<'monthly' | 'yearly'>('monthly');
   const [category, setCategory] = useState('');
   const [color, setColor] = useState(colors[0]);
   const [nextPaymentDate, setNextPaymentDate] = useState('');
-  
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPremiumPopup, setShowPremiumPopup] = useState(false);
+  // use centralized api() helper so dev proxy works and prod uses VITE_API_BASE
+  const { getToken, user } = useAuth();
+  const token = getToken();
+
+  const hasReachedLimit = subscriptionCount >= 5 && !user?.has_paid;
 
   const brands = [
     { id: 'spotify', label: 'Spotify', color: '#1DB954', icon: 'simple-icons:spotify' },
@@ -66,45 +74,47 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
     { id: 'edf', label: 'EDF', color: '#FFC000', icon: 'mage:electricity-fill' },
   ];
 
-  // image upload removed from UI
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
+
     setError(null);
-    
+
     if (!name || !price || !category || !nextPaymentDate) {
-      setError('Merci de remplir tous les champs obligatoires.');
+      setError('Merci de remplir tous les champs.');
       return;
     }
 
     setIsSubmitting(true);
+
     try {
-      const result = await Promise.resolve(onAdd({
+      const res = await onAdd?.({
         name,
         price: parseFloat(price),
         currency: '€',
-        billingCycle,
+        billing_cycle: billing_cycle,
         category,
         color,
-        nextPaymentDate: new Date(nextPaymentDate),
-        startDate: new Date(),
+        next_payment_date: new Date(nextPaymentDate),
         icon: selectedIcon ?? undefined,
-      }));
+      });
 
-      if (result && 'ok' in result && !result.ok) {
-        setError(result.error);
+      if (res && res.ok === false) {
+        if (res.error === 'FREE_LIMIT_REACHED') {
+          setShowPremiumPopup(true);
+        } else {
+          setError(res.error || 'Erreur serveur');
+        }
         return;
       }
 
-      // Reset form
+      // reset
       setName('');
       setPrice('');
-      setBillingCycle('monthly');
       setCategory('');
-      setColor(colors[0]);
       setNextPaymentDate('');
-      // imageUrl removed
       setSelectedIcon(null);
       setOpen(false);
     } finally {
@@ -121,10 +131,66 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Nouvel abonnement</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {hasReachedLimit ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>Limite gratuite atddteinte 🚫</DialogTitle>
+            </DialogHeader>
+            <div className="text-center py-4">
+              <p className="text-gray-600 mb-4">
+                Vous avez atteint la limite de 5 abonnements.
+                Passez au Premium pour continuer.
+              </p>
+
+              <button
+                className="bg-black text-white px-4 py-2 rounded-lg w-full mb-3"
+                onClick={async () => {
+                  try {
+                    const res = await fetch(api('/api/stripe/create-checkout-session'), {
+                      method: 'POST',
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                      },
+                    });
+
+                    if (!res.ok) {
+                      const text = await res.text().catch(() => '');
+                      setError(text || `Erreur serveur ${res.status}`);
+                      return;
+                    }
+
+                    const contentType = res.headers.get('content-type') || '';
+                    const data = contentType.includes('application/json') ? await res.json() : null;
+
+                    if (!data || !data.url) {
+                      setError('Réponse inattendue du serveur lors de la création de la session de paiement.');
+                      return;
+                    }
+
+                    window.location.href = data.url;
+                  } catch (err: any) {
+                    console.error('create-checkout-session error', err);
+                    setError('Erreur réseau lors de la création de la session de paiement.');
+                  }
+                }}
+              >
+                Passer Premium
+              </button>
+
+              <button
+                className="text-sm text-gray-500 underline w-full"
+                onClick={() => setOpen(false)}
+              >
+                Fermer
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle>Nouvel abonnement</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {error}
@@ -202,10 +268,10 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="billing">Cycle</Label>
-              <Select value={billingCycle} onValueChange={(v) => setBillingCycle(v as 'monthly' | 'yearly')}>
+              <Select value={billing_cycle} onValueChange={(v) => setbilling_cycle(v as 'monthly' | 'yearly')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -259,11 +325,47 @@ export function AddSubscriptionDialog({ onAdd }: AddSubscriptionDialogProps) {
             </div>
           </div>
 
+          <PremiumPopup
+              open={showPremiumPopup}
+              onClose={() => setShowPremiumPopup(false)}
+              onUpgrade={async () => {
+                    try {
+                      const res = await fetch(api('/api/stripe/create-checkout-session'), {
+                        method: 'POST',
+                        headers: {
+                          Authorization: `Bearer ${token}`,
+                        },
+                      });
+
+                      if (!res.ok) {
+                        const text = await res.text().catch(() => '');
+                        setError(text || `Erreur serveur ${res.status}`);
+                        return;
+                      }
+
+                      const contentType = res.headers.get('content-type') || '';
+                      const data = contentType.includes('application/json') ? await res.json() : null;
+
+                      if (!data || !data.url) {
+                        setError('Réponse inattendue du serveur lors de la création de la session de paiement.');
+                        return;
+                      }
+
+                      window.location.href = data.url;
+                    } catch (err: any) {
+                      console.error('create-checkout-session error', err);
+                      setError('Erreur réseau lors de la création de la session de paiement.');
+                    }
+                  }}
+          />
+
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             Ajouter l'abonnement
           </Button>
-        </form>
+            </form>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
