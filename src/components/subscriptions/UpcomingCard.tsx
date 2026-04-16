@@ -44,7 +44,7 @@ export function UpcomingCard({ subscription, onClick }: UpcomingCardProps) {
 
   return (
     <motion.div
-      className="flex-shrink-0 rounded-2xl bg-card p-4 shadow-sm transition-all duration-300 hover:shadow-md min-w-[160px] cursor-pointer active:scale-[0.98] lg:min-w-0 lg:p-5"
+      className="flex-shrink-0 rounded-2xl bg-card p-4 shadow-sm transition-all duration-300 hover:shadow-md w-64 cursor-pointer active:scale-[0.98] lg:w-64 lg:p-5"
       onClick={onClick}
       layout
       initial={false}
