@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 
 function Login() {
-  const { login, signup, error, loading, isAuthenticated } = useAuth();
+  const {login, signup, error, loading, isAuthenticated} = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -63,58 +63,70 @@ function Login() {
   if (isAuthenticated) return null;
 
   return (
-    <>
-      <PasswordChangedPopup open={showPasswordChanged} onClose={() => setShowPasswordChanged(false)} />
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-full max-w-sm mx-4 rounded-2xl bg-card p-6 shadow">
-        <h2 className="mb-4 text-xl font-bold">{isSignup ? 'Créer un compte' : 'Se connecter'}</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {isSignup && (
-            <div className="space-y-1">
-              <Label>Nom</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} type="text" disabled={isSubmitting} />
+      <>
+        <PasswordChangedPopup open={showPasswordChanged} onClose={() => setShowPasswordChanged(false)}/>
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="w-full max-w-sm mx-4 rounded-2xl bg-card p-6 shadow">
+            <h2 className="mb-4 text-xl font-bold">{isSignup ? 'Créer un compte' : 'Se connecter'}</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {isSignup && (
+                  <div className="space-y-1">
+                    <Label>Nom</Label>
+                    <Input value={name} onChange={(e) => setName(e.target.value)} type="text" disabled={isSubmitting}/>
+                  </div>
+              )}
+              <div className="space-y-1">
+                <Label>Email</Label>
+                <Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required
+                       disabled={isSubmitting}/>
+              </div>
+              <div className="space-y-1">
+                <Label>Mot de passe</Label>
+                <Input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required
+                       disabled={isSubmitting}/>
+              </div>
+              <div className="text-right">
+                <button
+                    type="button"
+                    className="text-sm text-primary underline"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/forgot-password');
+                    }}
+                    disabled={isSubmitting}
+                >
+                  Mot de passe oublié ?
+                </button>
+              </div>
+              {(localError || error) && <p className="text-sm text-destructive">{localError ?? error}</p>}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="h-4 w-4 animate-spin"/>}
+                {isSubmitting || loading ? (isSignup ? 'Inscription...' : 'Connexion...') : (isSignup ? "S'inscrire" : 'Se connecter')}
+              </Button>
+              {isSignup && (
+                  <p className="text-xs text-muted-foreground">
+                    En vous inscrivant, vous acceptez le traitement de vos donnees personnelles conforme au RGPD pour la
+                    creation et la gestion de votre compte.
+                  </p>
+              )}
+            </form>
+            <div className="mt-4 text-center">
+              <button
+                  type="button"
+                  className="text-sm text-primary underline"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsSignup(!isSignup);
+                    setLocalError(null);
+                  }}
+                  disabled={isSubmitting}
+              >
+                {isSignup ? 'J’ai déjà un compte — Se connecter' : 'Créer un compte'}
+              </button>
             </div>
-          )}
-          <div className="space-y-1">
-            <Label>Email</Label>
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required disabled={isSubmitting} />
           </div>
-          <div className="space-y-1">
-            <Label>Mot de passe</Label>
-            <Input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required disabled={isSubmitting} />
-          </div>
-          <div className="text-right">
-            <button
-              className="text-sm text-primary underline"
-              onClick={(e) => { e.preventDefault(); navigate('/forgot-password'); }}
-              disabled={isSubmitting}
-            >
-              Mot de passe oublié ?
-            </button>
-          </div>
-          {(localError || error) && <p className="text-sm text-destructive">{localError ?? error}</p>}
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isSubmitting || loading ? (isSignup ? 'Inscription...' : 'Connexion...') : (isSignup ? "S'inscrire" : 'Se connecter')}
-          </Button>
-          {isSignup && (
-            <p className="text-xs text-muted-foreground">
-              En vous inscrivant, vous acceptez le traitement de vos donnees personnelles conforme au RGPD pour la creation et la gestion de votre compte.
-            </p>
-          )}
-        </form>
-        <div className="mt-4 text-center">
-          <button
-            className="text-sm text-primary underline"
-            onClick={(e) => { e.preventDefault(); setIsSignup(!isSignup); setLocalError(null); }}
-            disabled={isSubmitting}
-          >
-            {isSignup ? 'J’ai déjà un compte — Se connecter' : 'Créer un compte'}
-          </button>
         </div>
-        </div>
-      </div>
-    </>
+      </>
   );
 }
 
