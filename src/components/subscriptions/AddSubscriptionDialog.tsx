@@ -130,7 +130,9 @@ export function AddSubscriptionDialog({ onAdd, subscriptionCount = 0 }: AddSubsc
           Ajouter
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        className="sm:max-w-md max-h-[90vh] overflow-y-auto p-3 sm:p-4 w-[95%] sm:w-auto mx-auto"
+      >
         {hasReachedLimit ? (
           <>
             <DialogHeader>
@@ -310,13 +312,13 @@ export function AddSubscriptionDialog({ onAdd, subscriptionCount = 0 }: AddSubsc
 
           <div className="space-y-2">
             <Label>Couleur</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {colors.map((c) => (
                 <button
                   key={c}
                   type="button"
                   onClick={() => setColor(c)}
-                  className={`h-8 w-8 rounded-full transition-all ${
+                  className={`h-6 w-6 rounded-full transition-all ${
                     color === c ? 'ring-2 ring-primary ring-offset-2' : ''
                   }`}
                   style={{ backgroundColor: c }}
