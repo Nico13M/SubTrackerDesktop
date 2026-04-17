@@ -14,7 +14,6 @@ export default defineConfig(({ mode }) => {
     : envBase
     ? (envBase.startsWith('http') ? envBase : `https://${envBase}`)
     : 'http://localhost:3000';
-    
 
     return {
         plugins: [react()],
@@ -24,7 +23,7 @@ export default defineConfig(({ mode }) => {
                 '/api': {
                     target: API_TARGET,
                     changeOrigin: true,
-                    secure: true,
+                    secure: mode !== 'development',
                     rewrite: (path) => path.replace(/^\/api/, '/api'),
                 },
             },
